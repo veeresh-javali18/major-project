@@ -1,0 +1,82 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero animate-fade">
+    <div class="badge" style="background: var(--primary-light); color: var(--primary); margin-bottom: 2rem; display: inline-block; border: 1px solid var(--primary-glow);">
+        NEW: DUAL-MODEL ENSEMBLE ANALYSIS v3.0
+    </div>
+    <h1>The Future of <br><span>Respiratory Diagnostics</span>.</h1>
+    <p>Empowering healthcare professionals with clinical-grade ensemble AI. Using multiple neural networks to provide the most accurate Chest X-Ray analysis ever.</p>
+    
+    <div class="nav-btns" style="justify-content: center; margin-top: 1rem; gap: 20px;">
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard_redirect' %}" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 50px;">
+                Enter Dashboard <i class="fas fa-arrow-right" style="margin-left: 10px;"></i>
+            </a>
+        {% else %}
+            <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 1.1rem 2.8rem; font-size: 1.1rem; border-radius: 50px;">
+                Get Started for Free <i class="fas fa-user-plus" style="margin-left: 10px;"></i>
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-outline" style="padding: 1.1rem 2.8rem; font-size: 1.1rem; border-radius: 50px;">
+                Doctor Portal Login
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="container" style="padding-top: 0;">
+    <div style="width: 100%; border-radius: 40px; overflow: hidden; box-shadow: var(--shadow-lg); border: 8px solid white; margin-bottom: 5rem;">
+        <img src="{% static 'images/hero.png' %}" alt="AI Diagnostic Dashboard" style="width: 100%; display: block;">
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="glass-card stat-card" style="text-align: center;">
+            <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-layer-group" style="font-size: 1.5rem; color: var(--primary);"></i>
+            </div>
+            <h3>MobileNet + ResNet Ensemble</h3>
+            <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem;">Cross-verifying results between ultra-fast MobileNet and deep ResNet for precision.</p>
+        </div>
+        <div class="glass-card stat-card" style="text-align: center;">
+            <div style="width: 60px; height: 60px; background: #e6fffa; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-shield-virus" style="font-size: 1.5rem; color: var(--success);"></i>
+            </div>
+            <h3>Clinically Validated</h3>
+            <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem;">Designed in collaboration with radiologists to ensure medical-grade accuracy.</p>
+        </div>
+        <div class="glass-card stat-card" style="text-align: center;">
+            <div style="width: 60px; height: 60px; background: #fffaf0; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-file-invoice-medical" style="font-size: 1.5rem; color: var(--warning);"></i>
+            </div>
+            <h3>Instant Certification</h3>
+            <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem;">Get comprehensive PDF reports ready for clinical review within seconds.</p>
+        </div>
+    </div>
+</section>
+
+<section class="container" style="margin-top: 5rem;">
+    <div class="glass-card" style="display: flex; align-items: center; gap: 4rem; padding: 4rem;">
+        <div style="flex: 1;">
+            <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">How it <span>Works</span></h2>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 1.5rem;">
+                <li style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">1</div>
+                    <p>Upload a clear Chest X-Ray in PNG or JPG format.</p>
+                </li>
+                <li style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">2</div>
+                    <p>Our Neural Network analyzes the image in under 3 seconds.</p>
+                </li>
+                <li style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">3</div>
+                    <p>A licensed Radiologist reviews and approves the findings.</p>
+                </li>
+            </ul>
+        </div>
+        <div style="flex: 1; text-align: right;">
+             <img src="https://img.freepik.com/free-vector/modern-medicine-diagnostic-set-flat-icons-collection-with-mri-scanner-human-internal-organs-x-ray-isolated-vector-illustration_1284-68160.jpg?w=826&t=st=1713271200~exp=1713271800~hmac=6b8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d" alt="Medical AI" style="width: 100%; border-radius: 20px; mix-blend-mode: color-dodge;">
+        </div>
+    </div>
+</section>
+{% endblock %}

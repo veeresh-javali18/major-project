@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; background-color: #f4f7fa; padding: 20px;">
+    <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #0061ff; text-align: center;">LungQuest AI Diagnostic Report</h1>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        
+        <p>Hello <strong>{{ report.patient.username }}</strong>,</p>
+        <p>Your lung scan analysis is complete. Here are your clinical findings:</p>
+        
+        <div style="background-color: #f8f9fc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0061ff;">
+            <p style="margin: 0; font-size: 18px;"><strong>Finding:</strong> {{ report.result_label }}</p>
+            <p style="margin: 5px 0 0; color: #718096;"><strong>Confidence:</strong> {{ report.confidence|floatformat:1 }}%</p>
+        </div>
+
+        <div style="text-align: center; margin: 25px 0;">
+            <p style="font-size: 14px; color: #4a5568; margin-bottom: 10px;"><strong>Analyzed Scan:</strong></p>
+            <img src="{{ full_image_url }}" alt="Lung Scan Image" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        </div>
+        
+        <p><strong>Clinical Description:</strong></p>
+        <p style="color: #4a5568; line-height: 1.6;">{{ clinical_info.description }}</p>
+        
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ full_report_url }}" style="background-color: #0061ff; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Full Interactive Result</a>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+        <p style="font-size: 12px; color: #a0aec0; text-align: center;">This is an automated AI report. For a professional medical consultation, please contact your Pulmonologist.</p>
+    </div>
+</body>
+</html>

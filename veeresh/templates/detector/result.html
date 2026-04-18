@@ -1,0 +1,201 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container animate-fade">
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <div class="badge" style="background: var(--primary-glow); color: var(--primary); margin-bottom: 1rem;">Clinical Diagnostic Report #{{ report.id }}</div>
+            <h1 style="font-size: 2.5rem;">Diagnostic <span>Results</span></h1>
+        </div>
+        <div class="nav-btns">
+            {% if report.status == 'Unrequested' %}
+                <a href="{% url 'request_approval' report.id %}" class="btn btn-primary" style="margin-right: 10px; background: var(--warning); border: none;">
+                    <i class="fas fa-paper-plane" style="margin-right: 10px;"></i> Request Doctor Approval
+                </a>
+            {% elif report.status == 'Pending' %}
+                <div class="badge" style="background: var(--warning); color: white; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 12px; margin-right: 10px;">
+                    <i class="fas fa-clock" style="margin-right: 10px;"></i> Awaiting Doctor Review
+                </div>
+            {% endif %}
+
+            <a href="{% url 'email_report' report.id %}" class="btn btn-primary" style="margin-right: 10px;">
+                <i class="fas fa-envelope" style="margin-right: 10px;"></i> Send to Email
+            </a>
+            <a href="{% url 'report_pdf' report.id %}" target="_blank" class="btn btn-outline" style="margin-right: 10px;">
+                <i class="fas fa-file-pdf" style="margin-right: 10px;"></i> Export PDF
+            </a>
+            {% if report.status == 'Approved' %}
+                <div class="badge" style="background: var(--success); color: white; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 12px;">
+                    <i class="fas fa-check-double" style="margin-right: 10px;"></i> Verified by Dr. {{ report.reviewed_by.username }}
+                </div>
+            {% elif report.status == 'Rejected' %}
+                <div class="badge" style="background: var(--error); color: white; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 12px;">
+                    <i class="fas fa-times-circle" style="margin-right: 10px;"></i> Rejected by Dr. {{ report.reviewed_by.username }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if report.status == 'Approved' %}
+        <div class="glass-card animate-fade" style="background: rgba(56, 161, 105, 0.05); border-color: var(--success); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
+            <div style="width: 50px; height: 50px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div>
+                <h4 style="color: var(--success);">CLINICALLY VERIFIED REPORT</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">This report has been reviewed and validated by Dr. {{ report.reviewed_by.username }}.</p>
+            </div>
+        </div>
+    {% elif report.status == 'Rejected' %}
+        <div class="glass-card animate-fade" style="background: rgba(229, 62, 62, 0.05); border-color: var(--error); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
+            <div style="width: 50px; height: 50px; background: var(--error); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                <i class="fas fa-ban"></i>
+            </div>
+            <div>
+                <h4 style="color: var(--error);">REPORT REJECTED / INVALIDATED</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Dr. {{ report.reviewed_by.username }} has rejected this finding. Please read the clinical notes below.</p>
+            </div>
+        </div>
+    {% else %}
+        <div class="glass-card animate-fade" style="background: rgba(229, 62, 62, 0.05); border-color: var(--error); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
+            <div style="width: 50px; height: 50px; background: var(--error); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h4 style="color: var(--error);">NOT VERIFIED BY MEDICAL PROFESSIONAL</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">This is an AI-generated finding. It has not been reviewed by a licensed doctor yet.</p>
+            </div>
+        </div>
+    {% endif %}
+
+
+    <div class="result-header" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px;">
+        <!-- Scan Visual -->
+        <div class="glass-card scan-display" style="height: fit-content;">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Input X-Ray Scan</h3>
+            <img src="{{ report.image.url }}" alt="Patient Lung X-Ray" style="width: 100%; border-radius: 12px; margin-bottom: 1rem;">
+            <div style="padding: 1rem; text-align: center; color: var(--text-gray); font-size: 0.8rem; background: rgba(0,0,0,0.05); border-radius: 8px;">
+                <i class="fas fa-microscope" style="margin-right: 5px;"></i> Dual-model ensemble analysis complete.
+            </div>
+        </div>
+
+        <!-- AI Metrics Comparison -->
+        <div class="result-info">
+            <!-- Ensemble Consensus Card -->
+            <div class="glass-card" style="margin-bottom: 2rem; border-left: 6px solid var(--primary); background: linear-gradient(135deg, rgba(0, 97, 255, 0.05) 0%, rgba(0, 198, 255, 0.05) 100%);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.8rem; color: var(--primary);">System Consensus: {{ report.result_label }}</h2>
+                    <div class="badge" style="background: {{ clinical_info.badge_color }}; color: white; padding: 0.5rem 1rem;">{{ clinical_info.severity }} Severity</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem;">
+                    <span style="color: var(--text-gray); font-size: 1.1rem;">Aggregated Confidence: <strong>{{ report.confidence|floatformat:2 }}%</strong></span>
+                </div>
+                
+                <h3 style="margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted);">Ensemble Probability Distribution</h3>
+                {% for label, prob in predictions.items %}
+                    <div style="margin-bottom: 1.2rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                            <span style="font-weight: 500;">{{ label }}</span>
+                            <span style="color: var(--primary); font-weight: 600;">{{ prob|floatformat:1 }}%</span>
+                        </div>
+                        <div class="confidence-bar-container" style="height: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; overflow: hidden;">
+                            <div class="confidence-bar" style="width: {{ prob }}%; height: 100%; background: {% if label == report.result_label %}var(--primary){% else %}#cbd5e0{% endif %}; transition: width 1.5s ease-out;"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Individual Model Comparison -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Model 1: TensorFlow/CNN -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"><i class="fas fa-mobile-alt"></i> MODEL A (MobileNet)</h4>
+                    {% if model_tf_results %}
+                        {% with label_tf=report.result_label %}
+                            {% for label, prob in model_tf_results.items %}
+                                <div style="margin-bottom: 0.8rem;">
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
+                                        <span>{{ label }}</span>
+                                        <span>{{ prob|floatformat:1 }}%</span>
+                                    </div>
+                                    <div style="height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px;">
+                                        <div style="width: {{ prob }}%; height: 100%; background: #4a5568; border-radius: 2px;"></div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        <p style="font-size: 0.8rem; color: var(--error);">Model A unavailable.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Model 2: PyTorch/ResNet -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"><i class="fas fa-microchip"></i> MODEL B (PT-ResNet)</h4>
+                    {% if model_pt_results %}
+                        {% for label, prob in model_pt_results.items %}
+                            <div style="margin-bottom: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
+                                    <span>{{ label }}</span>
+                                    <span>{{ prob|floatformat:1 }}%</span>
+                                </div>
+                                <div style="height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px;">
+                                    <div style="width: {{ prob }}%; height: 100%; background: #4a5568; border-radius: 2px;"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="font-size: 0.8rem; color: var(--error);">Model B unavailable.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Insights -->
+    <div class="glass-card" style="margin-top: 2rem; background: rgba(255, 255, 255, 0.7); border-color: var(--primary-glow);">
+        <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-notes-medical" style="color: var(--primary); margin-right: 10px;"></i> Detailed Clinical Insight</h3>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px;">
+            <div>
+                <p style="color: var(--text-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">{{ clinical_info.description }}</p>
+                {% if report.review_notes %}
+                    <div style="background: rgba(56, 161, 105, 0.1); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success);">
+                        <h4 style="color: var(--success); margin-bottom: 0.5rem;"><i class="fas fa-user-check"></i> Physician's Clinical Remarks:</h4>
+                        <p style="font-style: italic; color: var(--text-gray); font-size: 1.05rem;">"{{ report.review_notes }}"</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div style="background: var(--primary-light); padding: 2rem; border-radius: 16px; border: 1px solid var(--primary-glow);">
+                <h4 style="color: var(--primary); margin-bottom: 1.5rem;"><i class="fas fa-shield-virus" style="margin-right: 10px;"></i> Protocol & Precautions</h4>
+                <ul style="list-style: none; padding: 0;">
+                    {% for p in clinical_info.precautions %}
+                        <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
+                            <i class="fas fa-check-circle" style="color: var(--primary); margin-top: 4px; font-size: 0.9rem;"></i>
+                            <span style="color: var(--text-gray); font-size: 0.95rem;">{{ p }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="dashboard-grid">
+        <div class="glass-card">
+            <h4><i class="fas fa-procedures" style="color: var(--primary); margin-right: 10px;"></i> Next Steps</h4>
+            <ul style="margin-top: 1rem; font-size: 0.95rem; color: var(--text-gray); display: flex; flex-direction: column; gap: 10px;">
+                <li>Consult a Pulmonologist for clinical correlation.</li>
+                <li>Compare with previous radiological history.</li>
+                <li>Routine follow-up in 14 days if symptoms persist.</li>
+            </ul>
+        </div>
+        <div class="glass-card">
+            <h4><i class="fas fa-notes-medical" style="color: var(--primary); margin-right: 10px;"></i> Medical Disclaimer</h4>
+            <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-gray);">
+                This AI-generated analysis is for informational purposes only and should not replace professional medical advice. Always verify results with a licensed healthcare provider.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

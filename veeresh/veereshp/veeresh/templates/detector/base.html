@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LungQuest AI | High-End Lung Disease Detection{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+
+    <nav>
+        <a href="{% url 'landing' %}" class="logo">
+            <i class="fas fa-lungs"></i> Lung<span>Quest</span> AI
+        </a>
+        <ul class="nav-links">
+            <li><a href="{% url 'landing' %}">Home</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'dashboard_redirect' %}">Dashboard</a></li>
+            {% endif %}
+            <li><a href="{% url 'resources' %}">Resources</a></li>
+            <li><a href="{% url 'about' %}">About</a></li>
+        </ul>
+        <div class="nav-btns">
+            {% if user.is_authenticated %}
+                <span style="margin-right: 15px; color: var(--text-gray);">Hello, {{ user.username }}</span>
+                <a href="{% url 'profile' %}" class="btn btn-outline" style="margin-right: 10px;">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+                <a href="{% url 'signup' %}" class="btn btn-primary">Join Now</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+                <div class="glass-card" style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid var(--primary);">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <div class="container" style="padding-bottom: 0;">
+        <a href="javascript:history.back()" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.9rem; border: none; background: transparent; color: var(--text-muted);">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back
+        </a>
+    </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+
+    <footer style="padding: 3rem 5%; text-align: center; border-top: 1px solid var(--border); margin-top: 5rem;">
+        <p style="color: var(--text-gray);">&copy; 2026 LungQuest AI. Clinical Grade Diagnostics.</p>
+    </footer>
+
+    <script>
+        // Smooth transitions for progress bars if any
+        window.addEventListener('load', () => {
+            const bars = document.querySelectorAll('.confidence-bar');
+            bars.forEach(bar => {
+                const width = bar.getAttribute('data-width');
+                bar.style.width = width + '%';
+            });
+        });
+
+        // Auto-logout after 5 minutes of inactivity
+        {% if user.is_authenticated %}
+        let idleTime = 0;
+        const idleInterval = setInterval(timerIncrement, 60000); // Check every minute
+
+        // Zero the idle timer on mouse movement or keypress
+        window.onmousemove = resetTimer;
+        window.onkeypress = resetTimer;
+        window.onclick = resetTimer;
+        window.ontouchstart = resetTimer;
+
+        function resetTimer() {
+            idleTime = 0;
+        }
+
+        function timerIncrement() {
+            idleTime++;
+            if (idleTime >= 5) { // 5 minutes
+                window.location.href = "{% url 'logout' %}";
+            }
+        }
+        {% endif %}
+    </script>
+</body>
+</html>

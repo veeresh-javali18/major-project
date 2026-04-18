@@ -1,0 +1,152 @@
+{% extends 'detector/base.html' %}
+
+{% block content %}
+<div class="dashboard-header animate-fade">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Clinical <span>Review Dashboard</span></h1>
+            <p>Medical Professional: Dr. {{ user.username }} | {{ user.specialization|default:"Pulmonologist" }}</p>
+        </div>
+        <div class="nav-btns">
+            <button onclick="document.getElementById('scan-upload').click()" class="btn" style="background: white; color: var(--primary);">
+                <i class="fas fa-plus-circle" style="margin-right: 10px;"></i> New Scan Analysis
+            </button>
+            <form id="upload-form" method="POST" action="{% url 'upload_scan' %}" enctype="multipart/form-data" style="display: none;">
+                {% csrf_token %}
+                <input type="file" id="scan-upload" name="image" onchange="document.getElementById('upload-form').submit()">
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container animate-fade" style="margin-top: -3rem;">
+
+    <!-- Active Review Queue -->
+    <div class="glass-card" style="margin-bottom: 3rem;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.2rem;"><i class="fas fa-stethoscope" style="color: var(--primary); margin-right: 10px;"></i> Pending Review Queue</h3>
+            <span class="badge" style="background: var(--primary);">{{ pending_reports.count }} New Scans</span>
+        </div>
+        
+        <div style="padding: 1rem;">
+            {% if pending_reports %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Date Uploaded</th>
+                            <th>AI Detection</th>
+                            <th>Confidence</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in pending_reports %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600;">{{ report.patient.username|make_list|first|upper }}</div>
+                                        <div>
+                                            <span>{{ report.patient.username }}</span>
+                                            {% if report.requested_doctor == user %}
+                                                <br><span style="font-size: 0.7rem; background: var(--success); color: white; padding: 2px 5px; border-radius: 3px;">Requested For You</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ report.created_at|date:"M d, H:i" }}</td>
+                                <td>
+                                    <span style="font-weight: 600; color: {% if 'Normal' in report.result_label %}var(--success){% else %}var(--error){% endif %};">
+                                        {{ report.result_label }}
+                                    </span>
+                                </td>
+                                <td>{{ report.confidence|floatformat:1 }}%</td>
+                                <td>
+                                    <a href="{% url 'review_report' report.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Review Scan</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div style="text-align: center; padding: 3rem;">
+                    <p style="color: var(--text-gray);">Clean queue. No pending reports for review.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- My Review History -->
+    <div class="glass-card">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border);">
+            <h3 style="font-size: 1.2rem;">My Approval History</h3>
+        </div>
+        <div style="padding: 1rem;">
+            {% if reviewed_reports %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Date Reviewed</th>
+                            <th>AI Class</th>
+                            <th>Final Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reviewed_reports %}
+                            <tr>
+                                <td>{{ report.patient.username }}</td>
+                                <td>{{ report.created_at|date:"M d, Y" }}</td>
+                                <td>{{ report.result_label }}</td>
+                                <td>
+                                    <span class="badge" style="background: {% if report.status == 'Approved' %}var(--success){% else %}var(--error){% endif %}; color: white;">
+                                        {{ report.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'report_detail' report.id %}" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="padding: 2rem; color: var(--text-gray); text-align: center;">You haven't reviewed any reports yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div id="processing-modal" class="processing-overlay">
+    <div class="processing-content">
+        <div class="processing-img-wrap">
+            <img id="preview-img" src="" alt="Preview">
+            <div class="scan-line"></div>
+        </div>
+        <h2 class="loader-text pulse" style="color: white; border: none; background: transparent;">NEURAL NETWORK ANALYZING...</h2>
+        <p class="loader-sub">Identifying radiological signatures and anomalies.</p>
+        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 10px;">
+             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">Feature Extraction</span>
+             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">Pathology Mapping</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('scan-upload').addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('preview-img').src = event.target.result;
+                document.getElementById('processing-modal').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('upload-form').submit();
+                }, 800);
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+</script>
+{% endblock %}

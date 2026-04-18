@@ -1,0 +1,50 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}About Us | LungQuest AI{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 3rem;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 2rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Mission Toward precision
+        </h1>
+        
+        <p style="color: var(--text-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">
+            LungQuest AI is a cutting-edge clinical diagnostic platform dedicated to revolutionizing early detection of lung diseases. By leveraging advanced Deep Learning models and a secure, role-based infrastructure, we bridge the gap between AI-driven preliminary analysis and expert clinical verification.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem;">
+            <div class="glass-card" style="padding: 2rem; background: rgba(255,255,255,0.03);">
+                <i class="fas fa-microscope" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 1rem;">Advanced AI</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Our CNN models are trained on thousands of clinical X-ray images to identify Opacity, COVID-19, and Pneumonia with high precision.</p>
+            </div>
+            
+            <div class="glass-card" style="padding: 2rem; background: rgba(255,255,255,0.03);">
+                <i class="fas fa-user-md" style="font-size: 2rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+                <h3 style="margin-bottom: 1rem;">Expert Review</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Every AI prediction is subject to verification by licensed radiologists, ensuring clinical-grade accuracy and accountability.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 4rem; text-align: center;">
+            <h2 style="margin-bottom: 1.5rem;">Core Values</h2>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
+                <div style="text-align: center; flex: 1; min-width: 150px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Security</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">HIPAA Compliant</p>
+                </div>
+                <div style="text-align: center; flex: 1; min-width: 150px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Speed</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Real-time Processing</p>
+                </div>
+                <div style="text-align: center; flex: 1; min-width: 150px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Trust</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Verified Results</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'detector/base.html' %}
+
+{% block content %}
+<div class="auth-wrapper animate-fade">
+    <div class="glass-card auth-card">
+        <div style="width: 60px; height: 60px; background: var(--primary-glow); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <i class="fas fa-envelope-open-text" style="color: var(--primary); font-size: 1.5rem;"></i>
+        </div>
+        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Verify Identity</h2>
+        <p style="color: var(--text-gray); margin-bottom: 2rem;">We've sent a 6-digit code to your registered <strong>Email ({{ user.email }})</strong>.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label style="text-align: center;">Enter OTP</label>
+                <input type="text" name="otp" class="form-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 2rem; letter-spacing: 1rem; padding: 1rem;" required autofocus>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
+                Verify & Continue <i class="fas fa-check-circle" style="margin-left: 10px;"></i>
+            </button>
+        </form>
+        
+        <p style="margin-top: 2rem; color: var(--text-gray);">
+            Didn't receive the code? <a href="#" style="color: var(--primary); text-decoration: none;">Resend OTP</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

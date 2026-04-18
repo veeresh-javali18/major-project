@@ -1,0 +1,187 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-header animate-fade">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Patient <span>Dashboard</span></h1>
+            <p>Manage your health scans and diagnostic history.</p>
+        </div>
+        <div class="nav-btns">
+            {% if user.is_superuser %}
+                <a href="{% url 'user_management' %}" class="btn btn-outline" style="background: rgba(0,0,0,0.1); border: 1px solid white; color: white; margin-right: 10px;">
+                    <i class="fas fa-users-cog"></i> Admin Panel
+                </a>
+            {% endif %}
+            <button onclick="document.getElementById('scan-upload').click()" class="btn" style="background: white; color: var(--primary);">
+                <i class="fas fa-plus-circle" style="margin-right: 10px;"></i> New Lung Scan
+            </button>
+            <form id="upload-form" method="POST" action="{% url 'upload_scan' %}" enctype="multipart/form-data" style="display: none;">
+                {% csrf_token %}
+                <input type="file" id="scan-upload" name="image" onchange="document.getElementById('upload-form').submit()">
+                <textarea name="patient_notes" id="patient-notes-input"></textarea>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container animate-fade" style="margin-top: -3rem;">
+
+
+    <!-- Stats -->
+    <div class="dashboard-grid">
+        <div class="glass-card stat-card" style="border-left: 4px solid var(--primary);">
+            <p style="color: var(--text-gray); font-size: 0.9rem;">Total Scans</p>
+            <h2 style="font-size: 2.5rem;">{{ reports.count }}</h2>
+        </div>
+        <div class="glass-card stat-card" style="border-left: 4px solid var(--success);">
+            <p style="color: var(--text-gray); font-size: 0.9rem;">Normal Results</p>
+            <h2 style="font-size: 2.5rem;">{{ normal_count }}</h2>
+        </div>
+        <div class="glass-card stat-card" style="border-left: 4px solid var(--warning);">
+            <p style="color: var(--text-gray); font-size: 0.9rem;">Pending Reviews</p>
+            <h2 style="font-size: 2.5rem;">{{ pending_count }}</h2>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div class="glass-card" style="margin-top: 3rem; padding: 0;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.2rem;">Recent Scans</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" placeholder="Search history..." class="form-input" style="padding: 0.5rem 1rem; width: 250px;">
+            </div>
+        </div>
+        
+        <div style="padding: 1rem;">
+            {% if reports %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scan Image</th>
+                            <th>Date</th>
+                            <th>Primary Finding</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                            <tr>
+                                <td>
+                                    <img src="{{ report.image.url }}" class="history-img" alt="Scan">
+                                </td>
+                                <td>{{ report.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <span style="font-weight: 600;">{{ report.result_label }}</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 100px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: {{ report.confidence }}%; height: 100%; background: var(--primary);"></div>
+                                        </div>
+                                        <span style="font-size: 0.85rem;">{{ report.confidence|floatformat:1 }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background: {% if report.status == 'Approved' %}var(--success){% elif report.status == 'Rejected' %}var(--error){% else %}var(--warning){% endif %}; color: white;">
+                                        {{ report.status }}
+                                        {% if report.status == 'Pending' and report.requested_doctor %}
+                                            <br><small>with Dr. {{ report.requested_doctor.username }}</small>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        {% if report.status == 'Unrequested' %}
+                                            <form action="{% url 'request_approval' report.id %}" method="POST" style="display: flex; gap: 5px; align-items: center;">
+                                                {% csrf_token %}
+                                                <select name="doctor_id" class="form-input" style="padding: 0.3rem; font-size: 0.75rem; width: 130px; border-color: var(--warning);">
+                                                    <option value="">Any Doctor</option>
+                                                    {% for doc in available_doctors %}
+                                                        <option value="{{ doc.id }}">Dr. {{ doc.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: var(--warning); border: none;" title="Send for Medical Review">
+                                                    <i class="fas fa-paper-plane"></i> Request
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        <a href="{% url 'report_detail' report.id %}" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="View Clinical Dashboard">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'report_pdf' report.id %}" target="_blank" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="Download PDF">
+                                            <i class="fas fa-download"></i> Save
+                                        </a>
+                                        <a href="{% url 'report_pdf' report.id %}" target="_blank" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="Print Report">
+                                            <i class="fas fa-print"></i> Print
+                                        </a>
+                                        <a href="{% url 'email_report' report.id %}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="Send to Registered Email">
+                                            <i class="fas fa-envelope"></i> Send Email
+                                        </a>
+                                        <a href="{% url 'delete_report' report.id %}" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: var(--error); color: white;" title="Delete Permanently" onclick="return confirm('Delete this scan permanently?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div style="text-align: center; padding: 4rem;">
+                    <i class="fas fa-folder-open" style="font-size: 3rem; color: var(--border); margin-bottom: 1rem;"></i>
+                    <p style="color: var(--text-gray);">No scans found. Upload your first X-Ray to begin.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div id="processing-modal" class="processing-overlay">
+    <div class="processing-content">
+        <div class="processing-img-wrap">
+            <img id="preview-img" src="" alt="Preview">
+            <div class="scan-line"></div>
+        </div>
+        <h2 class="loader-text pulse">NEURAL NETWORK ANALYZING...</h2>
+        <p class="loader-sub">Extracting radiological features from X-Ray scan.</p>
+        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 10px;">
+             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Augmenting</span>
+             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Classifying</span>
+             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Validating</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('scan-upload').addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Show preview image
+                document.getElementById('preview-img').src = event.target.result;
+                // Show modal
+                document.getElementById('processing-modal').style.display = 'flex';
+                // Submit after a small delay to let the animation start
+                setTimeout(() => {
+                    document.getElementById('upload-form').submit();
+                }, 800);
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Handle search filtering
+    document.querySelector('input[placeholder="Search history..."]').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

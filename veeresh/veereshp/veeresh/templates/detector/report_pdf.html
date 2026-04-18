@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clinical Report - {{ report.patient.username }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+        }
+        body { font-family: Helvetica, Arial, sans-serif; color: #333; line-height: 1.4; }
+        .header-table { width: 100%; border-bottom: 2px solid #0061ff; padding-bottom: 10px; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: #0061ff; }
+        .report-id { font-size: 14px; color: #777; }
+        .section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; color: #0061ff; }
+        .info-table { width: 100%; margin-bottom: 20px; }
+        .info-table td { padding: 5px 0; }
+        .content-table { width: 100%; }
+        .scan-box { border: 1px solid #ddd; padding: 10px; text-align: center; width: 45%; }
+        .scan-img { width: 100%; height: auto; }
+        .finding-badge { background-color: #0061ff; color: #ffffff; padding: 5px 15px; border-radius: 10px; font-weight: bold; }
+        .footer { margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; font-size: 10px; color: #999; text-align: center; }
+        .signature-box { margin-top: 30px; width: 200px; border-top: 1px solid #333; padding-top: 5px; }
+        .precaution-box { background-color: #f0f7ff; padding: 10px; margin-top: 10px; border-left: 3px solid #0061ff; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="logo">LungQuest AI</div>
+                <div class="report-id">Diagnostic ID: LQR-{{ report.id|stringformat:"05d" }}</div>
+            </td>
+            <td style="text-align: right; vertical-align: top;">
+                <strong>Date:</strong> {{ report.created_at|date:"F d, Y" }}<br>
+                <strong>Patient ID:</strong> P-{{ report.patient.id|stringformat:"04d" }}<br>
+                <div style="margin-top: 5px;">
+                    {% if report.status == 'Approved' %}
+                        <span style="color: #38a169; font-weight: bold;">VERIFIED REPORT</span>
+                    {% elif report.status == 'Rejected' %}
+                        <span style="color: #e53e3e; font-weight: bold;">REPORT REJECTED</span>
+                    {% elif report.status == 'Pending' %}
+                        <span style="color: #ed8936; font-weight: bold;">PENDING REVIEW</span>
+                    {% else %}
+                        <span style="color: #e53e3e; font-weight: bold;">UNVERIFIED (DRAFT)</span>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">Patient Information</div>
+    <table class="info-table">
+        <tr>
+            <td width="33%"><strong>Name:</strong> {{ report.patient.username }}</td>
+            <td width="33%"><strong>Email:</strong> {{ report.patient.email }}</td>
+            <td width="33%"><strong>Status:</strong> {{ report.status }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Radiological Findings</div>
+    <table class="content-table">
+        <tr>
+            <td class="scan-box" valign="top">
+                <img src="{{ report.image.url }}" class="scan-img" alt="X-Ray Scan">
+                <p style="font-size: 10px; color: #666;">Chest X-Ray AP/PA View</p>
+            </td>
+            <td style="padding-left: 20px;" valign="top">
+                <div style="margin-bottom: 10px;">
+                    <span class="finding-badge">AI Flag: {{ report.result_label }}</span>
+                </div>
+                <p><strong>Confidence Score:</strong> {{ report.confidence|floatformat:2 }}%</p>
+                
+                <h4 style="margin-top: 10px; margin-bottom: 5px;">Probability Distribution</h4>
+                {% for label, prob in predictions.items %}
+                    <div style="font-size: 12px; margin-bottom: 2px;">
+                        {{ label }}: {{ prob|floatformat:1 }}%
+                    </div>
+                {% endfor %}
+
+                <h4 style="margin-top: 10px; margin-bottom: 5px;">Clinical Insight</h4>
+                <p style="font-size: 11px; color: #444; text-align: justify;">{{ clinical_info.description }}</p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="precaution-box">
+        <h5 style="margin: 0 0 5px 0; color: #0061ff;">Recommended Precautions</h5>
+        <ul style="margin: 0; padding-left: 15px; font-size: 11px;">
+            {% for p in clinical_info.precautions %}
+                <li>{{ p }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if report.status == 'Approved' or report.status == 'Rejected' %}
+    <div style="margin-top: 20px;">
+        <div class="section-title">Doctor's Clinical Review</div>
+        <p style="font-size: 12px; margin: 2px 0;"><strong>Reviewed By:</strong> Dr. {{ report.reviewed_by.username }} ({{ report.reviewed_by.specialization|default:"Radiologist" }})</p>
+        <p style="font-size: 12px; margin: 5px 0;"><strong>Notes:</strong></p>
+        <p style="font-size: 11px; font-style: italic; background: #f9f9f9; padding: 10px;">"{{ report.review_notes }}"</p>
+        
+        <div class="signature-box">
+            <p style="margin: 0; font-size: 12px;">Digitally Signed via Secure OTP</p>
+            <p style="font-size: 10px; color: #777;">License: {{ report.reviewed_by.license_number|default:"LIC-44521" }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>LungQuest AI Clinical Suite - Powered by Advanced Neural Networks</p>
+        <p>DISCLAIMER: This is an automated diagnostic aid. Final medical decisions require qualified professional consultation.</p>
+    </div>
+</body>
+</html>

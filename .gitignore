@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Django
+db.sqlite3
+media/
+static/
+
+# Models
+# Files > 100MB will be rejected by GitHub without LFS
+# lung_resnet50.pth is ~99MB, so it might pass.
+
+# OS
+.DS_Store
+Thumbs.db

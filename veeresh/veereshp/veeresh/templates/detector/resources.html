@@ -1,0 +1,63 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Medical Resources | LungQuest AI{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="text-align: center; margin: 4rem 0;">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem;">Clinical <span style="background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Resources</span></h1>
+        <p style="color: var(--text-gray); font-size: 1.2rem;">Understanding lung health and AI diagnostics</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+        <!-- Card 1 -->
+        <div class="glass-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(0, 242, 254, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                <i class="fas fa-virus"></i>
+            </div>
+            <h3>COVID-19 Awareness</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"> Learn about the radiological signatures of COVID-19 and how AI assists in rapid screening during pandemic conditions.</p>
+            <a href="#" class="btn btn-outline" style="margin-top: auto; align-self: flex-start; font-size: 0.8rem;">Read More</a>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(79, 172, 254, 0.1); display: flex; align-items: center; justify-content: center; color: var(--secondary);">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+            <h3>Pneumonia Screening</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Distinguishing between bacterial and viral pneumonia using deep learning feature extraction techniques.</p>
+            <a href="#" class="btn btn-outline" style="margin-top: auto; align-self: flex-start; font-size: 0.8rem;">Read More</a>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(0, 242, 254, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                <i class="fas fa-shield-virus"></i>
+            </div>
+            <h3>Scan Quality Guide</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">How to ensure your X-ray uploads meet clinical quality standards for the most accurate AI analysis.</p>
+            <a href="#" class="btn btn-outline" style="margin-top: auto; align-self: flex-start; font-size: 0.8rem;">Read More</a>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding: 3rem; margin-bottom: 5rem;">
+        <h2 style="margin-bottom: 2rem; text-align: center;">Frequently Asked Questions</h2>
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <details style="padding: 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+                <summary style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">How accurate is the AI prediction?</summary>
+                <p style="color: var(--text-muted); padding-top: 0.5rem;">Our AI achieves 90%+ accuracy on standardized datasets, but it is intended only as a decision-support tool. Always rely on the Doctor's verified report.</p>
+            </details>
+            <details style="padding: 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+                <summary style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">Is my medical data secure?</summary>
+                <p style="color: var(--text-muted); padding-top: 0.5rem;">Yes, we use end-to-end encryption and session-based timeouts to ensure your diagnostic reports remain confidential.</p>
+            </details>
+            <details style="padding: 1rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+                <summary style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">How long does a doctor review take?</summary>
+                <p style="color: var(--text-muted); padding-top: 0.5rem;">Reviews typically happen within 24-48 hours. You will receive an email and SMS notification once the review is complete.</p>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}

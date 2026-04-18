@@ -1,0 +1,60 @@
+{% extends 'detector/base.html' %}
+
+{% block content %}
+<div class="dashboard-header animate-fade">
+    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">System <span>User Management</span></h1>
+    <p>Administrative control for clinical staff and patient accounts.</p>
+</div>
+
+<div class="container animate-fade" style="margin-top: -3rem;">
+    <div class="glass-card">
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3>Registered Core Users</h3>
+            <span class="badge" style="background: var(--primary);">{{ all_users.count }} Total</span>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Email</th>
+                    <th>Role</th>
+                    <th>Verified</th>
+                    <th>Joined Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in all_users %}
+                    <tr>
+                        <td><strong>{{ u.username }}</strong></td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            <span class="badge" style="background: {% if u.role == 'doctor' %}var(--primary){% else %}var(--text-muted){% endif %}; color: white;">
+                                {{ u.role|upper }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if u.is_verified %}
+                                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle" style="color: var(--error);"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            {% if u != user %}
+                                <a href="{% url 'delete_account' u.id %}" class="btn" style="background: var(--error); color: white; padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="return confirm('Are you absolutely sure you want to delete this user? This cannot be undone.')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Current User</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

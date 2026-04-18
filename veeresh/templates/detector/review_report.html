@@ -1,0 +1,50 @@
+{% extends 'detector/base.html' %}
+
+{% block content %}
+<div class="container animate-fade">
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2.3rem;">Medical <span>Review Assistant</span></h1>
+        <p style="color: var(--text-gray);">Reviewing scan ID #{{ report.id }} for patient {{ report.patient.username }}
+        </p>
+    </div>
+
+    <div class="result-header">
+        <div class="glass-card scan-display" style="flex: 1.5;">
+            <img src="{{ report.image.url }}" alt="Scan for review">
+        </div>
+
+        <div class="glass-card" style="flex: 1; height: fit-content;">
+            <h3 style="margin-bottom: 1.5rem;">Clinical Assessment</h3>
+            <p style="margin-bottom: 0.5rem; color: var(--text-gray);">AI Primary Finding: <strong
+                    style="color: white;">{{ report.result_label }} ({{ report.confidence|floatformat:1 }}%)</strong>
+            </p>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label>Action Choice</label>
+                    <select name="action" class="form-input">
+                        <option value="Approved">Approve AI Findings</option>
+                        <option value="Rejected">Reject / Requires Re-scan</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Clinical Description / Medical Remarks (Mandatory)</label>
+                    <textarea name="notes" class="form-input" rows="4" placeholder="Enter findings and justification for approval/rejection..." required></textarea>
+                </div>
+
+                <div
+                    style="background: rgba(255, 183, 77, 0.1); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; border-left: 3px solid var(--warning);">
+                    <p style="font-size: 0.85rem; color: var(--warning);">Security Note: You will be asked to verify
+                        your identity via OTP to finalize this review.</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1.2rem;">
+                    Sign & Verify Review <i class="fas fa-signature" style="margin-left: 10px;"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

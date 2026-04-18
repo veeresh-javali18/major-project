@@ -1,0 +1,64 @@
+{% extends 'detector/base.html' %}
+
+{% block content %}
+<div class="auth-wrapper animate-fade">
+    <div class="glass-card auth-card">
+        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Access Portal</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Please select your access role to continue.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                <label style="flex: 1; cursor: pointer;">
+                    <input type="radio" name="login_role" value="patient" checked style="display: none;" onchange="updateLoginUI(this)">
+                    <div class="role-box active" id="role-patient" style="padding: 1rem; border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition);">
+                        <i class="fas fa-user" style="font-size: 1.5rem; margin-bottom: 10px;"></i><br>
+                        <strong>Patient</strong>
+                    </div>
+                </label>
+                <label style="flex: 1; cursor: pointer;">
+                    <input type="radio" name="login_role" value="doctor" style="display: none;" onchange="updateLoginUI(this)">
+                    <div class="role-box" id="role-doctor" style="padding: 1rem; border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition);">
+                        <i class="fas fa-user-md" style="font-size: 1.5rem; margin-bottom: 10px;"></i><br>
+                        <strong>Doctor</strong>
+                    </div>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" class="form-input" placeholder="johndoe" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
+                Login <i class="fas fa-sign-in-alt" style="margin-left: 10px;"></i>
+            </button>
+        </form>
+        
+        <p style="margin-top: 2rem; color: var(--text-muted);">
+            New to LungQuest? <a href="{% url 'signup' %}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Create account</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    .role-box.active {
+        border-color: var(--primary) !important;
+        background: var(--primary-light) !important;
+        color: var(--primary);
+    }
+</style>
+
+<script>
+    function updateLoginUI(el) {
+        document.querySelectorAll('.role-box').forEach(box => box.classList.remove('active'));
+        if (el.value === 'patient') document.getElementById('role-patient').classList.add('active');
+        if (el.value === 'doctor') document.getElementById('role-doctor').classList.add('active');
+    }
+</script>
+{% endblock %}
+

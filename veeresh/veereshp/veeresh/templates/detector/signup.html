@@ -1,0 +1,101 @@
+{% extends 'detector/base.html' %}
+
+{% block content %}
+<div class="auth-wrapper animate-fade">
+    <div class="glass-card auth-card">
+        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Create Account</h2>
+        <p style="color: var(--text-gray); margin-bottom: 2rem;">Join the leading AI health platform.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" class="form-input" placeholder="johndoe" required>
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" class="form-input" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <div style="display: flex; gap: 8px;">
+                    <select name="country_code" class="form-input" style="width: 100px; padding: 0.85rem 0.5rem; flex-shrink: 0;">
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+61">🇦🇺 +61</option>
+                        <option value="+86">🇨🇳 +86</option>
+                        <option value="+81">🇯🇵 +81</option>
+                    </select>
+                    <input type="tel" name="phone_number_raw" class="form-input" placeholder="9876543210" required style="flex-grow: 1;">
+                </div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Select your country code and enter your mobile number.</small>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                <label style="flex: 1; cursor: pointer;">
+                    <input type="radio" name="role" value="patient" checked style="display: none;" onchange="updateSignupUI(this)">
+                    <div class="role-box active" id="role-patient" style="padding: 1rem; border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition);">
+                        <i class="fas fa-user" style="font-size: 1.5rem; margin-bottom: 10px;"></i><br>
+                        <strong>Patient</strong>
+                    </div>
+                </label>
+                <label style="flex: 1; cursor: pointer;">
+                    <input type="radio" name="role" value="doctor" style="display: none;" onchange="updateSignupUI(this)">
+                    <div class="role-box" id="role-doctor" style="padding: 1rem; border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition);">
+                        <i class="fas fa-user-md" style="font-size: 1.5rem; margin-bottom: 10px;"></i><br>
+                        <strong>Doctor</strong>
+                    </div>
+                </label>
+            </div>
+
+            <div id="doctor-fields" style="display: none; animation: fadeIn 0.3s ease;">
+                <div class="form-group">
+                    <label>Medical Specialization</label>
+                    <input type="text" name="specialization" class="form-input" placeholder="e.g. Radiologist">
+                </div>
+                <div class="form-group">
+                    <label>Medical License Number</label>
+                    <input type="text" name="license_number" class="form-input" placeholder="e.g. LIC-98234">
+                </div>
+            </div>
+
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
+                Sign Up <i class="fas fa-paper-plane" style="margin-left: 10px;"></i>
+            </button>
+        </form>
+        
+        <p style="margin-top: 2rem; color: var(--text-muted);">
+            Already have an account? <a href="{% url 'login' %}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Login here</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    .role-box.active {
+        border-color: var(--primary) !important;
+        background: var(--primary-light) !important;
+        color: var(--primary);
+    }
+</style>
+
+<script>
+    function updateSignupUI(el) {
+        document.querySelectorAll('.role-box').forEach(box => box.classList.remove('active'));
+        if (el.value === 'patient') {
+            document.getElementById('role-patient').classList.add('active');
+            document.getElementById('doctor-fields').style.display = 'none';
+        }
+        if (el.value === 'doctor') {
+            document.getElementById('role-doctor').classList.add('active');
+            document.getElementById('doctor-fields').style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}
+
