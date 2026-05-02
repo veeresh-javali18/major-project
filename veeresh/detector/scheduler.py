@@ -27,9 +27,9 @@ def check_consultation_reminders():
         try:
             # Parse the date and time.
             date_str = consult.preferred_date.strftime("%Y-%m-%d")
-            time_str = consult.scheduled_time
+            time_str = consult.scheduled_time.replace('.', ':') # Fix for non-standard formats like 11.00
             
-            # Use dateutil parser to intelligently parse string like "2026-04-29 10:30 AM"
+            # Use dateutil parser to intelligently parse string
             datetime_str = f"{date_str} {time_str}"
             scheduled_dt = parser.parse(datetime_str)
             
