@@ -1,0 +1,96 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Issue Prescription | LungQuest AI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper py-5 min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card border-0 shadow-lg auth-card overflow-hidden">
+                    <div class="card-header bg-white border-0 pt-5 pb-0 text-center">
+                        <div class="auth-icon-wrapper mx-auto mb-3" style="background: rgba(14,165,233,.1); color: var(--brand-primary);">
+                            <i class="fas fa-file-prescription fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">Clinical Prescription</h3>
+                        <p class="text-muted small">Finalize the consultation by issuing medical advice</p>
+                    </div>
+                    
+                    <div class="card-body p-4 p-md-5 pt-4">
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-4 border h-100">
+                                    <h6 class="fw-bold small text-uppercase text-muted mb-2">Patient</h6>
+                                    <h5 class="fw-bold mb-0 text-primary">{{ consultation.patient.username }}</h5>
+                                    <p class="small text-muted mb-0">Record ID: #C-{{ consultation.id|stringformat:"04d" }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-4 border h-100">
+                                    <h6 class="fw-bold small text-uppercase text-muted mb-2">Diagnosis</h6>
+                                    <h5 class="fw-bold mb-0 text-dark">{{ consultation.report.result_label }}</h5>
+                                    <p class="small text-muted mb-0">AI Confidence: {{ consultation.report.confidence|floatformat:1 }}%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="POST" id="prescription-form">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted mb-3">Medications & Dosages <span class="text-danger">*</span></label>
+                                <textarea name="medications" id="medications" class="form-control rounded-4 bg-light border-0 p-3" rows="5" 
+                                          placeholder="e.g. Paracetamol 500mg - 1 tablet twice a day after meals" required></textarea>
+                                <div id="med-error" class="invalid-feedback mt-2">
+                                    <i class="fas fa-exclamation-circle me-1"></i> Please provide medication details.
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted mb-3">Physician's Clinical Notes</label>
+                                <textarea name="doctor_notes" class="form-control rounded-4 bg-light border-0 p-3" rows="4" 
+                                          placeholder="Enter follow-up instructions, lifestyle advice, or specific warnings..."></textarea>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fw-bold small text-uppercase text-muted mb-3">Next Consultation Date <span class="text-danger">*</span></label>
+                                <input type="date" name="next_consultation_date" class="form-control rounded-4 bg-light border-0 p-3" required>
+                                <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i> Required: Specify the date the patient becomes eligible to book their follow-up.</div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-3">
+                                <button type="submit" class="btn btn-primary-p btn-lg flex-fill py-3 rounded-4 shadow-sm fw-bold">
+                                    <i class="fas fa-check-circle me-2"></i>Finalize & Issue
+                                </button>
+                                <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-p btn-lg flex-fill py-3 rounded-4">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('prescription-form');
+    const medInput = document.getElementById('medications');
+
+    form.addEventListener('submit', function(e) {
+        if (!medInput.value.trim()) {
+            e.preventDefault();
+            medInput.classList.add('is-invalid');
+            medInput.focus();
+        }
+    });
+
+    medInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('is-invalid');
+        }
+    });
+</script>
+{% endblock %}

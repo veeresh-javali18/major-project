@@ -1,29 +1,41 @@
 {% extends 'detector/base.html' %}
 
 {% block content %}
-<div class="auth-wrapper animate-fade">
-    <div class="glass-card auth-card">
-        <div style="width: 60px; height: 60px; background: var(--primary-glow); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-            <i class="fas fa-envelope-open-text" style="color: var(--primary); font-size: 1.5rem;"></i>
-        </div>
-        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Verify Identity</h2>
-        <p style="color: var(--text-gray); margin-bottom: 2rem;">We've sent a 6-digit code to your registered <strong>Email ({{ user.email }})</strong>.</p>
-        
-        <form method="POST">
-            {% csrf_token %}
-            <div class="form-group">
-                <label style="text-align: center;">Enter OTP</label>
-                <input type="text" name="otp" class="form-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 2rem; letter-spacing: 1rem; padding: 1rem;" required autofocus>
+<div class="auth-wrapper py-5 min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 col-xl-4">
+                <div class="glass-card auth-card p-4 p-lg-5 text-center shadow-lg border-0">
+                    <div class="auth-icon-wrapper mb-4">
+                        <i class="fas fa-envelope-open-text text-primary fs-3"></i>
+                    </div>
+                    
+                    <h2 class="fw-bold mb-2">Verify Identity</h2>
+                    <p class="text-muted small mb-4">We've sent a 6-digit code to your registered <br><strong>{{ user.email }}</strong></p>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide mb-3">Enter 6-Digit Code</label>
+                            <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold rounded-4 border-0 bg-light py-3" 
+                                   placeholder="· · · · · ·" maxlength="6" pattern="\d{6}" required autofocus 
+                                   style="letter-spacing: 12px; font-size: 1.8rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary-p btn-lg w-100 py-3 rounded-4 shadow-sm fw-bold animate-up">
+                            Verify & Continue <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                    
+                    <div class="mt-5 pt-3 border-top border-light">
+                        <p class="text-muted small mb-0">
+                            Didn't receive the code? 
+                            <a href="javascript:location.reload()" class="fw-bold text-primary text-decoration-none">Resend OTP</a>
+                        </p>
+                    </div>
+                </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
-                Verify & Continue <i class="fas fa-check-circle" style="margin-left: 10px;"></i>
-            </button>
-        </form>
-        
-        <p style="margin-top: 2rem; color: var(--text-gray);">
-            Didn't receive the code? <a href="#" style="color: var(--primary); text-decoration: none;">Resend OTP</a>
-        </p>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -127,15 +127,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Custom User Model
 AUTH_USER_MODEL = 'detector.User'
 
+# Redirect unauthenticated users to custom login page
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
 # Email Config (SMTP for Real Delivery)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '01fe23bca206@kletech.ac.in'  # <-- PLEASE UPDATE TO YOUR GMAIL
-EMAIL_HOST_PASSWORD = 'zpva jzzd zjzv hilc' 
-DEFAULT_FROM_EMAIL = '"LungQuest AI" <01fe23bca206@kletech.ac.in>'
+EMAIL_HOST_USER = 'veereshjavali0731@gmail.com'
+EMAIL_HOST_PASSWORD = 'mils tytj wvva nvuz' 
+DEFAULT_FROM_EMAIL = '"LungQuest AI" <veereshjavali0731@gmail.com>'
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Local Testing: EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

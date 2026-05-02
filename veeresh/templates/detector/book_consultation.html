@@ -1,0 +1,100 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Book Consultation | LungQuest AI{% endblock %}
+
+{% block content %}
+<div class="container animate-fade" style="max-width: 700px; margin-top: 3rem; margin-bottom: 5rem;">
+    
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+        <div style="width: 80px; height: 80px; background: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <i class="fas fa-stethoscope" style="font-size: 2.5rem; color: var(--primary);"></i>
+        </div>
+        <h1 style="font-size: 2.2rem;">Book Your <span>Consultation</span></h1>
+        <p style="color: var(--text-gray); font-size: 1.05rem; max-width: 500px; margin: 0.5rem auto 0;">
+            Schedule a follow-up call with Dr. {{ report.reviewed_by.username }} to discuss your diagnostic report #{{ report.id }}.
+        </p>
+    </div>
+
+    <div class="glass-card" style="padding: 2.5rem;">
+        <div style="background: rgba(0, 97, 255, 0.05); border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div style="width: 50px; height: 50px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow);">
+                    <i class="fas fa-user-md" style="color: var(--primary); font-size: 1.4rem;"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 2px;">Dr. {{ report.reviewed_by.username }}</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">{{ report.reviewed_by.specialization|default:"Lead Pulmonologist" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label style="font-weight: 600; color: var(--text-main); margin-bottom: 8px; display: block;">
+                        <i class="fas fa-calendar-alt" style="color: var(--primary); margin-right: 5px;"></i> Preferred Date
+                    </label>
+                    <input type="date" name="date" class="form-input" required min="{% now 'Y-m-d' %}"
+                        style="width: 100%; padding: 0.9rem; border: 1px solid var(--border); border-radius: 10px; font-family: inherit;">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Dr. {{ report.reviewed_by.username }} will assign a specific time slot for this date.</p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="font-weight: 600; color: var(--text-main); margin-bottom: 12px; display: block;">
+                    Consultation Mode
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="mode" value="Online" checked style="display: none;" id="mode-online">
+                        <div class="mode-card" onclick="document.getElementById('mode-online').click()" style="border: 2px solid var(--primary); background: rgba(0,97,255,0.05); border-radius: 12px; padding: 1rem; text-align: center; transition: all 0.3s;">
+                            <i class="fas fa-video" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; display: block;"></i>
+                            <span style="font-weight: 600; font-size: 0.9rem; display: block;">Online Video</span>
+                        </div>
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="mode" value="Offline" style="display: none;" id="mode-offline">
+                        <div class="mode-card" onclick="document.getElementById('mode-offline').click()" style="border: 2px solid var(--border); background: white; border-radius: 12px; padding: 1rem; text-align: center; transition: all 0.3s;">
+                            <i class="fas fa-hospital-user" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 8px; display: block;"></i>
+                            <span style="font-weight: 600; font-size: 0.9rem; display: block;">In-Person Visit</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <script>
+                document.querySelectorAll('input[name="mode"]').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        document.querySelectorAll('.mode-card').forEach(card => {
+                            card.style.border = '2px solid var(--border)';
+                            card.style.background = 'white';
+                            card.querySelector('i').style.color = 'var(--text-muted)';
+                        });
+                        if (this.checked) {
+                            const card = this.nextElementSibling;
+                            card.style.border = '2px solid var(--primary)';
+                            card.style.background = 'rgba(0,97,255,0.05)';
+                            card.querySelector('i').style.color = 'var(--primary)';
+                        }
+                    });
+                });
+            </script>
+
+            <div class="form-group" style="margin-bottom: 2.5rem;">
+                <label style="font-weight: 600; color: var(--text-main); margin-bottom: 8px; display: block;">
+                    Reason for Consultation (Optional)
+                </label>
+                <textarea name="notes" class="form-input" rows="3" placeholder="Any specific questions you have about the report?"
+                    style="width: 100%; padding: 0.9rem; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; resize: vertical;"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1.2rem; font-size: 1.1rem; box-shadow: var(--shadow-lg);">
+                Confirm Booking <i class="fas fa-check-circle" style="margin-left: 8px;"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

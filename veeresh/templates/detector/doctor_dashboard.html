@@ -1,152 +1,820 @@
 {% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Doctor Workspace | Clinical Review Queue{% endblock %}
 
 {% block content %}
-<div class="dashboard-header animate-fade">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Clinical <span>Review Dashboard</span></h1>
-            <p>Medical Professional: Dr. {{ user.username }} | {{ user.specialization|default:"Pulmonologist" }}</p>
-        </div>
-        <div class="nav-btns">
-            <button onclick="document.getElementById('scan-upload').click()" class="btn" style="background: white; color: var(--primary);">
-                <i class="fas fa-plus-circle" style="margin-right: 10px;"></i> New Scan Analysis
-            </button>
-            <form id="upload-form" method="POST" action="{% url 'upload_scan' %}" enctype="multipart/form-data" style="display: none;">
-                {% csrf_token %}
-                <input type="file" id="scan-upload" name="image" onchange="document.getElementById('upload-form').submit()">
-            </form>
+<div class="container-fluid px-lg-5 py-4">
+    
+    <!-- Header Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass p-4 p-md-5 rounded-4 shadow-lg position-relative overflow-hidden doctor-header-card">
+                <div class="doctor-header-accent"></div>
+                <div class="header-bg-glow"></div>
+                <div class="position-relative z-1">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <div class="role-identity-strip"><span class="role-dot"></span><i class="fas fa-user-md me-1"></i>Doctor Workspace</div>
+                            <h1 class="fw-bold mb-2 text-gradient">Clinical Command Centre</h1>
+                            <p class="text-secondary mb-0 fw-medium">
+                                <i class="fas fa-user-md me-2 text-primary"></i>DR. {{ user.username|upper }} 
+                                <span class="mx-2 text-muted">|</span> 
+                                {{ user.specialization|default:"General Physician" }}
+                            </p>
+                        </div>
+                        
+                        <div class="col-lg-4 mt-4 mt-lg-0">
+                            <div class="d-flex gap-3 justify-content-lg-end">
+
+                                {% if pending_reports.count > 0 %}
+                                <!-- Waitlist Card -->
+                                <div style="
+                                    display:flex; align-items:center; gap:14px;
+                                    background:rgba(255,255,255,0.92);
+                                    backdrop-filter:blur(16px);
+                                    border:1px solid rgba(226,232,240,0.8);
+                                    border-radius:14px;
+                                    box-shadow:0 4px 20px -4px rgba(0,0,0,0.10);
+                                    padding:14px 20px;
+                                    position:relative; overflow:hidden;
+                                    min-width:150px; flex:1;
+                                    transition:all .3s ease;
+                                ">
+                                    <!-- top accent bar -->
+                                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:14px 14px 0 0;"></div>
+                                    <!-- icon -->
+                                    <div style="width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(239,68,68,0.10));flex-shrink:0;">
+                                        <i class="fas fa-user-clock" style="font-size:1.15rem;color:#f59e0b;"></i>
+                                    </div>
+                                    <!-- text -->
+                                    <div style="display:flex;flex-direction:column;line-height:1.2;">
+                                        <span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#94a3b8;margin-bottom:2px;">Waitlist</span>
+                                        <span style="font-size:1.6rem;font-weight:800;letter-spacing:-0.03em;color:#f59e0b;line-height:1;">{{ pending_reports.count }}</span>
+                                        <span style="font-size:0.63rem;color:#94a3b8;margin-top:3px;font-weight:500;">Pending review</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Week Card -->
+                                <div onclick="document.getElementById('pills-history-tab').click(); window.scrollTo({top:0,behavior:'smooth'});"
+                                     style="
+                                    display:flex; align-items:center; gap:14px;
+                                    background:rgba(255,255,255,0.92);
+                                    backdrop-filter:blur(16px);
+                                    border:1px solid rgba(226,232,240,0.8);
+                                    border-radius:14px;
+                                    box-shadow:0 4px 20px -4px rgba(0,0,0,0.10);
+                                    padding:14px 20px;
+                                    position:relative; overflow:hidden;
+                                    min-width:150px; flex:1;
+                                    transition:all .3s ease;
+                                    cursor:pointer;
+                                " onmouseover="this.style.filter='brightness(0.96)';this.style.boxShadow='0 6px 24px -4px rgba(14,165,233,0.18)'"
+                                   onmouseout="this.style.filter='';this.style.boxShadow='0 4px 20px -4px rgba(0,0,0,0.10)'">
+                                    <!-- top accent bar -->
+                                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0ea5e9,#10b981);border-radius:14px 14px 0 0;"></div>
+                                    <!-- icon -->
+                                    <div style="width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(16,185,129,0.10));flex-shrink:0;">
+                                        <i class="fas fa-calendar-check" style="font-size:1.15rem;color:#0ea5e9;"></i>
+                                    </div>
+                                    <!-- text -->
+                                    <div style="display:flex;flex-direction:column;line-height:1.2;">
+                                        <span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#94a3b8;margin-bottom:2px;">This Week</span>
+                                        <span style="font-size:1.6rem;font-weight:800;letter-spacing:-0.03em;color:#0ea5e9;line-height:1;">{{ approved_week }}</span>
+                                        <span style="font-size:0.63rem;color:#0ea5e9;margin-top:3px;font-weight:600;">Cases reviewed <i class="fas fa-arrow-right ms-1" style="font-size:.55rem;"></i></span>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="container animate-fade" style="margin-top: -3rem;">
-
-    <!-- Active Review Queue -->
-    <div class="glass-card" style="margin-bottom: 3rem;">
-        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-size: 1.2rem;"><i class="fas fa-stethoscope" style="color: var(--primary); margin-right: 10px;"></i> Pending Review Queue</h3>
-            <span class="badge" style="background: var(--primary);">{{ pending_reports.count }} New Scans</span>
+    <!-- Navigation Tab Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="doctor-tab-bar d-flex align-items-center gap-2 px-1 py-1">
+                <ul class="nav nav-pills gap-2 border-0 flex-wrap" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-pending-tab" data-bs-toggle="pill" data-bs-target="#pills-pending" type="button" role="tab">
+                            <i class="fas fa-stream me-2"></i>Queue
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-consult-tab" data-bs-toggle="pill" data-bs-target="#pills-consult" type="button" role="tab">
+                            <i class="fas fa-calendar-alt me-2"></i>Consults
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-history-tab" data-bs-toggle="pill" data-bs-target="#pills-history" type="button" role="tab">
+                            <i class="fas fa-history me-2"></i>History
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-uploads-tab" data-bs-toggle="pill" data-bs-target="#pills-uploads" type="button" role="tab">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Uploads
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
-        
-        <div style="padding: 1rem;">
-            {% if pending_reports %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>Date Uploaded</th>
-                            <th>AI Detection</th>
-                            <th>Confidence</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in pending_reports %}
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600;">{{ report.patient.username|make_list|first|upper }}</div>
+    </div>
+
+    <div class="row g-5">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="pills-tabContent">
+                
+                <!-- Tab: Pending Queue -->
+                <div class="tab-pane fade show active" id="pills-pending" role="tabpanel">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-box bg-soft-primary p-2 me-3 rounded-3 shadow-sm">
+                            <i class="fas fa-list-ul text-primary"></i>
+                        </div>
+                        <h3 class="fw-bold mb-0">Priority Queue</h3>
+                    </div>
+
+                {% for report in pending_reports %}
+                <div class="case-card premium-hover rounded-4 p-4 mb-3 bg-white border-0 shadow-sm position-relative overflow-hidden">
+                    {% if report.requested_doctor == user %}
+                    <div class="card-glow-danger"></div>
+                    {% endif %}
+                    
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
+                        <div class="d-flex gap-4 align-items-center mb-3 mb-md-0">
+                            <div class="patient-avatar-lg {% if report.requested_doctor == user %}gradient-danger-bg{% else %}gradient-primary-bg{% endif %} text-white shadow-sm">
+                                {{ report.patient.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark">{{ report.patient.username }}</h5>
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-clock text-warning me-1"></i> Received {{ report.created_at|timesince }} ago
+                                </p>
+                                <div class="d-inline-flex align-items-center bg-light px-3 py-1 rounded-pill small border">
+                                    <i class="fas fa-robot me-2 text-primary"></i>
+                                    AI: {{ report.result_label }} ({{ report.confidence|floatformat:1 }}%)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <a href="{% url 'review_report' report.id %}" class="btn btn-premium {% if report.requested_doctor == user %}btn-primary-p{% else %}btn-outline-p{% endif %} px-4">
+                                Review Case <i class="fas fa-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+
+                <!-- Tab: Consultation Hub -->
+                <div class="tab-pane fade" id="pills-consult" role="tabpanel">
+                    <!-- Consultation Requests -->
+                    {% if consultation_requests %}
+                    <div class="mb-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="icon-box bg-soft-success p-2 me-3 rounded-3 shadow-sm">
+                                <i class="fas fa-calendar-alt text-success"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0">Consultation Requests</h3>
+                        </div>
+
+                        {% for consult in consultation_requests %}
+                        <div class="case-card premium-hover rounded-4 p-4 mb-3 bg-white border-0 shadow-sm">
+                            <div class="row align-items-center">
+                                <div class="col-md-7">
+                                    <div class="d-flex align-items-center gap-3 mb-3 mb-md-0">
+                                        <div class="icon-box bg-soft-success p-3 rounded-circle">
+                                            <i class="fas fa-user text-success"></i>
+                                        </div>
                                         <div>
-                                            <span>{{ report.patient.username }}</span>
-                                            {% if report.requested_doctor == user %}
-                                                <br><span style="font-size: 0.7rem; background: var(--success); color: white; padding: 2px 5px; border-radius: 3px;">Requested For You</span>
-                                            {% endif %}
+                                            <h5 class="fw-bold mb-0">{{ consult.patient.username }}</h5>
+                                            <p class="text-muted small mb-1">Prefers: {{ consult.preferred_date }}</p>
+                                            <span class="badge bg-soft-warning text-warning rounded-pill border border-warning border-opacity-25 px-3">Consultation Requested</span>
                                         </div>
                                     </div>
-                                </td>
-                                <td>{{ report.created_at|date:"M d, H:i" }}</td>
-                                <td>
-                                    <span style="font-weight: 600; color: {% if 'Normal' in report.result_label %}var(--success){% else %}var(--error){% endif %};">
-                                        {{ report.result_label }}
-                                    </span>
-                                </td>
-                                <td>{{ report.confidence|floatformat:1 }}%</td>
-                                <td>
-                                    <a href="{% url 'review_report' report.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Review Scan</a>
-                                </td>
-                            </tr>
+                                </div>
+                                <div class="col-md-5">
+                                    <form action="{% url 'schedule_consultation' consult.id %}" method="POST" class="d-flex gap-2">
+                                        {% csrf_token %}
+                                        <div class="flex-grow-1">
+                                            <input type="text" name="time_slot" class="form-control rounded-3" placeholder="e.g. 10:30 AM" required>
+                                            <input type="hidden" name="scheduled_date" value="{{ consult.preferred_date|date:'Y-m-d' }}">
+                                        </div>
+                                        <button type="submit" class="btn btn-success rounded-pill px-3">Confirm</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <div style="text-align: center; padding: 3rem;">
-                    <p style="color: var(--text-gray);">Clean queue. No pending reports for review.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Scheduled Consultations -->
+                    <div class="mb-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="icon-box bg-soft-info p-2 me-3 rounded-3 shadow-sm">
+                                <i class="fas fa-video text-info"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0">Upcoming Consultations</h3>
+                        </div>
+
+                        {% if scheduled_consultations %}
+                        <div class="row g-3">
+                            {% for consult in scheduled_consultations %}
+                            <div class="col-md-6">
+                                <div class="case-card premium-hover rounded-4 p-4 bg-white border-0 shadow-sm h-100">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <div class="d-flex flex-column gap-1">
+                                            <div class="badge bg-soft-primary text-primary rounded-pill px-3">{{ consult.scheduled_time }}</div>
+                                            <div class="badge bg-soft-secondary text-secondary rounded-pill px-3 small">
+                                                <i class="fas {% if consult.mode == 'Online' %}fa-video{% else %}fa-hospital-user{% endif %} me-1"></i>
+                                                {{ consult.mode }}
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small">{{ consult.preferred_date }}</div>
+                                    </div>
+                                    <h5 class="fw-bold mb-3">{{ consult.patient.username }}</h5>
+                                    <div class="d-flex gap-2">
+                                        {% if consult.mode == 'Online' %}
+                                        <a href="{% url 'video_call' consult.id %}" class="btn btn-primary-p btn-sm rounded-pill flex-fill">
+                                            <i class="fas fa-video me-1"></i> Start Call
+                                        </a>
+                                        {% else %}
+                                        <div class="btn btn-soft-info btn-sm rounded-pill flex-fill disabled">
+                                            <i class="fas fa-hospital-user me-1"></i> Clinic Visit
+                                        </div>
+                                        {% endif %}
+                                        <a href="{% url 'write_prescription' consult.id %}" class="btn btn-outline-p btn-sm rounded-pill flex-fill">
+                                            <i class="fas fa-prescription me-1"></i> Prescribe
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5 glass rounded-4 border-dashed">
+                            <i class="fas fa-calendar-day text-muted fs-1 mb-3"></i>
+                            <h5 class="fw-bold">No Scheduled Consultations</h5>
+                            <p class="text-muted mb-0">Confirm pending requests to populate your schedule.</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- My Review History -->
-    <div class="glass-card">
-        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border);">
-            <h3 style="font-size: 1.2rem;">My Approval History</h3>
-        </div>
-        <div style="padding: 1rem;">
-            {% if reviewed_reports %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>Date Reviewed</th>
-                            <th>AI Class</th>
-                            <th>Final Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in reviewed_reports %}
-                            <tr>
-                                <td>{{ report.patient.username }}</td>
-                                <td>{{ report.created_at|date:"M d, Y" }}</td>
-                                <td>{{ report.result_label }}</td>
-                                <td>
-                                    <span class="badge" style="background: {% if report.status == 'Approved' %}var(--success){% else %}var(--error){% endif %}; color: white;">
-                                        {{ report.status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{% url 'report_detail' report.id %}" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">View</a>
-                                </td>
-                            </tr>
+                <!-- Tab: Clinical History -->
+                <div class="tab-pane fade" id="pills-history" role="tabpanel">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-box bg-soft-secondary p-2 me-3 rounded-3 shadow-sm">
+                            <i class="fas fa-history text-secondary"></i>
+                        </div>
+                        <h3 class="fw-bold mb-0">Recent Clinical History</h3>
+                    </div>
+
+                    {% regroup reviewed_reports by patient as patient_groups %}
+                    <div class="ch-accordion-wrapper mb-5">
+                        {% for group in patient_groups %}
+                        {% with pat=group.grouper rlist=group.list %}
+                        <div class="ch-row rounded-4 bg-white shadow-sm mb-2 overflow-hidden" id="chrow-pat-{{ pat.id }}">
+
+                            <!-- Clickable patient header -->
+                            <div class="ch-row-header d-flex align-items-center gap-3 px-4 py-3 cursor-pointer"
+                                 onclick="toggleCHRow('pat-{{ pat.id }}')" role="button" tabindex="0"
+                                 onkeydown="if(event.key==='Enter')toggleCHRow('pat-{{ pat.id }}')">
+                                <!-- Avatar -->
+                                <div class="flex-shrink-0 bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                     style="width:42px;height:42px;font-size:0.9rem;flex-shrink:0;">
+                                    {{ pat.username|slice:":1"|upper }}
+                                </div>
+                                <!-- Name + meta -->
+                                <div class="flex-grow-1 min-w-0">
+                                    <h6 class="fw-bold mb-0 text-dark">{{ pat.username }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-file-medical me-1"></i>{{ rlist|length }} report{{ rlist|length|pluralize }}
+                                        &nbsp;·&nbsp; ID: #{{ pat.id }}
+                                    </small>
+                                </div>
+                                <!-- Report count badge -->
+                                <span class="ch-count-badge">{{ rlist|length }}</span>
+                                <!-- Chevron -->
+                                <div class="ch-toggle flex-shrink-0" id="chevron-pat-{{ pat.id }}">
+                                    <i class="fas fa-chevron-down text-muted small"></i>
+                                </div>
+                            </div>
+
+                            <!-- Expanded: all reports for this patient -->
+                            <div class="ch-detail-panel" id="chdetail-pat-{{ pat.id }}" style="display:none;">
+                                <div class="border-top border-light">
+                                    {% for report in rlist %}
+                                    <div class="ch-sub-report px-4 py-3 {% if not forloop.last %}border-bottom border-light{% endif %}">
+                                        <div class="row g-3 align-items-center">
+                                            <!-- Scan thumbnail -->
+                                            {% if report.image %}
+                                            <div class="col-auto">
+                                                <div class="ch-thumb rounded-3 overflow-hidden shadow-sm">
+                                                    <img src="{{ report.image.url }}" alt="Scan" class="w-100 h-100 object-fit-cover">
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            <!-- Stats -->
+                                            <div class="col">
+                                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                                    <span class="ch-view-tag {% if report.status == 'Approved' %}ch-view-approved{% else %}ch-view-rejected{% endif %}" style="pointer-events:none;font-size:.68rem;">
+                                                        <i class="fas fa-{% if report.status == 'Approved' %}check-circle{% else %}times-circle{% endif %} me-1"></i>{{ report.status }}
+                                                    </span>
+                                                    <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>{{ report.created_at|date:"M d, Y" }}</small>
+                                                </div>
+                                                <div class="row g-2">
+                                                    <div class="col-6 col-lg-3">
+                                                        <div class="ch-detail-stat">
+                                                            <span class="ch-stat-label">Report ID</span>
+                                                            <span class="ch-stat-val">#{{ report.id }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6 col-lg-3">
+                                                        <div class="ch-detail-stat">
+                                                            <span class="ch-stat-label">AI Diagnosis</span>
+                                                            <span class="ch-stat-val text-primary">{{ report.result_label }}</span>
+                                                        </div>
+                                                    </div>
+                                                    {% if report.confidence %}
+                                                    <div class="col-6 col-lg-3">
+                                                        <div class="ch-detail-stat">
+                                                            <span class="ch-stat-label">Confidence</span>
+                                                            <span class="ch-stat-val">{{ report.confidence|floatformat:1 }}%</span>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="col-6 col-lg-3">
+                                                        <div class="ch-detail-stat">
+                                                            <span class="ch-stat-label">Reviewed</span>
+                                                            <span class="ch-stat-val">{{ report.created_at|date:"M d, Y" }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Actions -->
+                                            <div class="col-auto">
+                                                <div class="d-flex flex-column gap-2">
+                                                    <a href="{% url 'report_detail' report.id %}" class="btn btn-primary-p btn-sm rounded-pill px-3">
+                                                        <i class="fas fa-file-medical me-1"></i>View Report
+                                                    </a>
+                                                    <a href="{% url 'compare_scans' report.patient.id %}" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                                                        <i class="fas fa-history me-1"></i>Scan History
+                                                    </a>
+                                                    {% if report.status == 'Approved' %}
+                                                    <a href="{% url 'report_pdf' report.id %}" class="btn btn-soft-success btn-sm rounded-pill px-3">
+                                                        <i class="fas fa-file-pdf me-1"></i>Download PDF
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        </div>
+                        {% endwith %}
+                        {% empty %}
+                        <div class="text-center py-5 glass rounded-4">
+                            <i class="fas fa-history fa-3x text-muted opacity-25 mb-3"></i>
+                            <h5 class="text-secondary">No Clinical History</h5>
+                            <p class="text-muted small mb-0">Reviewed reports will appear here.</p>
+                        </div>
                         {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p style="padding: 2rem; color: var(--text-gray); text-align: center;">You haven't reviewed any reports yet.</p>
-            {% endif %}
+                    </div>
+
+                    <div class="d-flex align-items-center mb-4 mt-5">
+                        <div class="icon-box bg-soft-info p-2 me-3 rounded-3 shadow-sm">
+                            <i class="fas fa-video-slash text-info"></i>
+                        </div>
+                        <h3 class="fw-bold mb-0">Consultation History</h3>
+                    </div>
+
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="px-4 py-3 border-0">Patient</th>
+                                        <th class="py-3 border-0">Date</th>
+                                        <th class="py-3 border-0">Mode</th>
+                                        <th class="py-3 border-0 text-center">Status</th>
+                                        <th class="py-3 border-0 text-end px-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for consult in consultation_history %}
+                                    <tr>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm bg-soft-success text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: 700; font-size: 0.8rem;">
+                                                    {{ consult.patient.username|slice:":1"|upper }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">{{ consult.patient.username }}</h6>
+                                                    <small class="text-muted">{{ consult.preferred_date }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ consult.created_at|date:"M d, Y" }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-soft-secondary text-secondary rounded-pill px-3"><i class="fas {% if consult.mode == 'Online' %}fa-video{% else %}fa-hospital-user{% endif %} me-1"></i>{{ consult.mode }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge {% if consult.status == 'Completed' %}bg-soft-success text-success{% else %}bg-soft-danger text-danger{% endif %} rounded-pill px-3">
+                                                {{ consult.status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end px-4">
+                                            {% if consult.status == 'Completed' %}
+                                                {% if consult.prescription %}
+                                                    <a href="{% url 'prescription_pdf' consult.prescription.id %}" class="btn btn-outline-p btn-sm rounded-pill px-3">
+                                                        <i class="fas fa-file-pdf me-1"></i>View PDF
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'write_prescription' consult.id %}" class="btn btn-primary-p btn-sm rounded-pill px-3">
+                                                        <i class="fas fa-plus me-1"></i>Add Prescription
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted small">No past consultations found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: My Uploads -->
+                <div class="tab-pane fade" id="pills-uploads" role="tabpanel">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-soft-warning p-2 me-3 rounded-3 shadow-sm">
+                                <i class="fas fa-cloud-upload-alt text-warning"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0">My Personal Case Library</h3>
+                        </div>
+                        <a href="{% url 'home' %}" class="btn btn-primary-p rounded-pill">
+                            <i class="fas fa-plus me-2"></i>New Upload
+                        </a>
+                    </div>
+
+                    <div class="row g-4">
+                        {% for report in uploaded_scans %}
+                        <div class="col-md-6 col-xl-4">
+                            <div class="case-card premium-hover rounded-4 overflow-hidden bg-white shadow-sm h-100 border-0">
+                                <div class="position-relative" style="height: 180px;">
+                                    <img src="{{ report.image.url }}" class="w-100 h-100 object-fit-cover" alt="Scan">
+                                    <div class="position-absolute top-0 end-0 p-3">
+                                        <span class="badge bg-dark bg-opacity-75 rounded-pill px-3">{{ report.result_label }}</span>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h6 class="fw-bold mb-1">Patient: {{ report.patient.username }}</h6>
+                                    <p class="text-muted small mb-3"><i class="fas fa-calendar-alt me-1"></i>{{ report.created_at|date:"M d, Y" }}</p>
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'report_detail' report.id %}" class="btn btn-soft-primary btn-sm rounded-pill flex-fill">View</a>
+                                        <a href="{% url 'report_pdf' report.id %}" class="btn btn-soft-success btn-sm rounded-pill"><i class="fas fa-file-pdf"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-5 glass rounded-4 border-dashed">
+                            <i class="fas fa-folder-open text-muted fs-1 mb-3"></i>
+                            <h5 class="fw-bold">Library Empty</h5>
+                            <p class="text-muted mb-0">Scans you upload directly will appear here for quick access.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div> <!-- End tab-content -->
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div style="position: sticky; top: 100px;">
+                
+                <!-- Quick stats -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 doctor-sidebar-card">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">System Performance</h5>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Unique Patients</span>
+                            <span class="fw-bold">{{ unique_patients }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Approved this week</span>
+                            <span class="fw-bold text-success">+{{ approved_week }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Rejected this week</span>
+                            <span class="fw-bold text-danger">{{ rejected_week }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Tools -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 doctor-sidebar-card">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-toolbox text-primary me-2"></i> Clinical Tools</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="list-group list-group-flush">
+                            <a href="{% url 'user_management' %}" class="list-group-item list-group-item-action border-0 rounded-3 p-3 d-flex align-items-center justify-content-between mb-2">
+                                <span class="d-flex align-items-center"><i class="fas fa-users-cog text-muted me-3"></i> User Management</span>
+                                <i class="fas fa-chevron-right small text-muted"></i>
+                            </a>
+                            <a href="{% url 'export_data' %}" class="list-group-item list-group-item-action border-0 rounded-3 p-3 d-flex align-items-center justify-content-between mb-2">
+                                <span class="d-flex align-items-center"><i class="fas fa-file-export text-muted me-3"></i> Batch Export Data</span>
+                                <i class="fas fa-chevron-right small text-muted"></i>
+                            </a>
+                            <a href="{% url 'system_analytics' %}" class="list-group-item list-group-item-action border-0 rounded-3 p-3 d-flex align-items-center justify-content-between">
+                                <span class="d-flex align-items-center"><i class="fas fa-chart-line text-muted me-3"></i> System Analytics</span>
+                                <i class="fas fa-chevron-right small text-muted"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Info -->
+                <div class="card border-0 shadow-sm rounded-4 bg-gradient-dark text-white overflow-hidden">
+                    <div class="card-body p-4 position-relative">
+                        <div class="header-bg-glow" style="opacity: 0.1;"></div>
+                        <h6 class="text-uppercase small fw-bold text-white-50 mb-3" style="letter-spacing: 1px;">System Status</h6>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-success bg-opacity-25 text-success rounded-circle p-2">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">Secure Clinical Session</h6>
+                                <p class="small mb-0 text-white-50">Authorized as verified physician.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Processing Modal -->
-<div id="processing-modal" class="processing-overlay">
-    <div class="processing-content">
-        <div class="processing-img-wrap">
-            <img id="preview-img" src="" alt="Preview">
-            <div class="scan-line"></div>
-        </div>
-        <h2 class="loader-text pulse" style="color: white; border: none; background: transparent;">NEURAL NETWORK ANALYZING...</h2>
-        <p class="loader-sub">Identifying radiological signatures and anomalies.</p>
-        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 10px;">
-             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">Feature Extraction</span>
-             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">Pathology Mapping</span>
-        </div>
-    </div>
-</div>
+{% block extra_css %}
+<style>
+/* ══════════════════════════════════════════════════════════
+   DOCTOR DASHBOARD  ·  Deep Indigo / Violet Clinical Theme
+   ══════════════════════════════════════════════════════════ */
 
+/* ── Page-level accent injection ── */
+:root {
+    --role-primary:   #4f46e5;   /* indigo-600  */
+    --role-primary-l: #6366f1;   /* indigo-500  */
+    --role-secondary: #7c3aed;   /* violet-600  */
+    --role-soft:      rgba(79,70,229,.10);
+    --role-soft-md:   rgba(79,70,229,.18);
+    --role-header-from: #1e1b4b; /* indigo-950 */
+    --role-header-to:   #312e81; /* indigo-900 */
+    --role-accent-bar:  linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+}
+
+/* ── Role identity banner inside header ── */
+.role-identity-strip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(79,70,229,.18), rgba(124,58,237,.12));
+    border: 1.5px solid rgba(99,102,241,.35);
+    border-radius: 50px;
+    padding: 5px 16px 5px 10px;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #6366f1;
+    margin-bottom: 14px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(79,70,229,.18);
+    animation: roleSlideIn .5s ease both;
+}
+.role-identity-strip .role-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.25);
+    animation: rolePulse 2s infinite;
+}
+@keyframes roleSlideIn {
+    from { opacity:0; transform:translateX(-12px); }
+    to   { opacity:1; transform:translateX(0); }
+}
+@keyframes rolePulse {
+    0%,100% { box-shadow: 0 0 0 3px rgba(79,70,229,.25); }
+    50%      { box-shadow: 0 0 0 6px rgba(79,70,229,.10); }
+}
+
+/* ── Header glass card override ── */
+.doctor-header-card {
+    background: linear-gradient(135deg, var(--role-header-from) 0%, var(--role-header-to) 60%, #4c1d95 100%) !important;
+    border: 1px solid rgba(99,102,241,.25) !important;
+    position: relative;
+    overflow: hidden;
+}
+.doctor-header-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+.doctor-header-card .position-relative { position: relative; z-index: 1; }
+.doctor-header-card h1 { color: #ffffff !important; }
+.doctor-header-card p.text-secondary { color: rgba(199,210,254,.85) !important; }
+.doctor-header-card .text-primary { color: #a5b4fc !important; }
+.doctor-header-card .text-muted { color: rgba(199,210,254,.5) !important; }
+
+/* Accent top bar inside header */
+.doctor-header-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--role-accent-bar);
+    border-radius: 1rem 1rem 0 0;
+}
+
+/* ── Nav tabs ── */
+.doctor-header-card .nav-link {
+    color: rgba(199,210,254,.7) !important;
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(99,102,241,.2) !important;
+    transition: all .25s;
+}
+.doctor-header-card .nav-link:hover {
+    color: #fff !important;
+    background: rgba(99,102,241,.25) !important;
+    border-color: rgba(99,102,241,.5) !important;
+}
+.doctor-header-card .nav-link.active {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px rgba(79,70,229,.45) !important;
+}
+
+/* ── Below-header tab bar ── */
+.doctor-tab-bar {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(99,102,241,.15);
+    border-radius: 1rem;
+    padding: 6px 10px;
+    box-shadow: 0 2px 12px rgba(79,70,229,.08);
+}
+.doctor-tab-bar .nav-link {
+    color: #64748b !important;
+    background: transparent !important;
+    border: 1.5px solid transparent !important;
+    font-size: .85rem;
+    transition: all .22s;
+}
+.doctor-tab-bar .nav-link:hover {
+    color: #4f46e5 !important;
+    background: rgba(79,70,229,.07) !important;
+    border-color: rgba(79,70,229,.2) !important;
+}
+.doctor-tab-bar .nav-link.active {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px rgba(79,70,229,.35) !important;
+}
+
+/* ── Sidebar cards ── */
+.doctor-sidebar-card {
+    border-left: 4px solid #4f46e5 !important;
+    transition: transform .2s, box-shadow .2s;
+}
+.doctor-sidebar-card:hover {
+    transform: translateX(3px);
+    box-shadow: 0 6px 24px rgba(79,70,229,.15) !important;
+}
+
+/* ── Session status card (dark gradient override) ── */
+.bg-gradient-dark {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
+}
+
+/* ── Clinical tools list ── */
+.list-group-item-action:hover {
+    background: rgba(79,70,229,.07) !important;
+    color: #4f46e5 !important;
+}
+.list-group-item-action:hover i { color: #4f46e5 !important; }
+
+/* ── Case cards accent on hover ── */
+.case-card.premium-hover:hover {
+    border-left: 3px solid #6366f1 !important;
+    box-shadow: 0 8px 32px rgba(79,70,229,.12) !important;
+}
+
+/* ── Clinical History Accordion ── */
+.ch-accordion-wrapper { display: flex; flex-direction: column; }
+
+.ch-row {
+    border: 1px solid rgba(0,0,0,.06);
+    transition: box-shadow .2s ease, border-color .2s ease;
+}
+.ch-row:hover { box-shadow: 0 4px 20px rgba(0,0,0,.09) !important; border-color: rgba(99,102,241,.18); }
+.ch-row.is-open { border-color: rgba(99,102,241,.35); }
+
+.ch-row-header { user-select: none; transition: background .15s; }
+.ch-row-header:hover { background: rgba(248,250,252,.8); }
+.ch-row-header:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; border-radius: 1rem; }
+
+.ch-toggle { transition: transform .25s ease; }
+.ch-row.is-open .ch-toggle { transform: rotate(180deg); }
+
+.ch-count-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 24px; padding: 0 7px;
+    background: #ede9fe; color: #6d28d9;
+    border: 1.5px solid #c4b5fd;
+    border-radius: 50px; font-size: .7rem; font-weight: 800;
+    flex-shrink: 0;
+}
+
+.ch-view-tag {
+    display: inline-flex; align-items: center;
+    font-size: .72rem; font-weight: 700;
+    padding: .3rem .9rem; border-radius: 50px;
+    border: 1.5px solid transparent;
+    letter-spacing: .01em;
+    transition: all .2s ease;
+    white-space: nowrap;
+}
+.ch-view-approved {
+    background: #ecfdf5; color: #059669;
+    border-color: #6ee7b7;
+}
+.ch-view-approved:hover { background: #d1fae5; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(5,150,105,.18); }
+
+.ch-view-rejected {
+    background: #fff1f2; color: #e11d48;
+    border-color: #fda4af;
+}
+.ch-view-rejected:hover { background: #ffe4e6; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(225,29,72,.18); }
+
+.cursor-pointer { cursor: pointer; }
+.ch-detail-panel { background: #f8fafc; }
+.ch-detail-inner { animation: fadeSlideIn .22s ease; }
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ch-thumb { width: 80px; height: 80px; background: #e2e8f0; }
+.ch-thumb img { object-fit: cover; width: 100%; height: 100%; }
+
+.ch-detail-stat {
+    background: white; border-radius: .75rem; padding: .6rem .85rem;
+    border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 2px;
+}
+.ch-stat-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; font-weight: 700; }
+.ch-stat-val   { font-size: .85rem; font-weight: 700; color: #0f172a; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.getElementById('scan-upload').addEventListener('change', function(e) {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                document.getElementById('preview-img').src = event.target.result;
-                document.getElementById('processing-modal').style.display = 'flex';
-                setTimeout(() => {
-                    document.getElementById('upload-form').submit();
-                }, 800);
-            }
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
+function toggleCHRow(id) {
+    const panel   = document.getElementById('chdetail-' + id);
+    const row     = document.getElementById('chrow-' + id);
+    const isOpen  = row.classList.contains('is-open');
+
+    if (isOpen) {
+        panel.style.display = 'none';
+        row.classList.remove('is-open');
+    } else {
+        panel.style.display = 'block';
+        row.classList.add('is-open');
+    }
+}
 </script>
 {% endblock %}

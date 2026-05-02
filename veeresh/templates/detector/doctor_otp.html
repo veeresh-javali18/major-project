@@ -1,25 +1,58 @@
 {% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Verify Review | LungQuest AI{% endblock %}
 
 {% block content %}
-<div class="auth-wrapper animate-fade">
-    <div class="glass-card auth-card" style="border-color: var(--warning);">
-        <div style="width: 60px; height: 60px; background: rgba(255, 183, 77, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-            <i class="fas fa-user-md" style="color: var(--warning); font-size: 1.5rem;"></i>
-        </div>
-        <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Medical Authentication</h2>
-        <p style="color: var(--text-gray); margin-bottom: 2rem;">As a licensed professional, please verify your identity to sign this medical record.</p>
-        
-        <form method="POST">
-            {% csrf_token %}
-            <div class="form-group">
-                <label style="text-align: center;">6-Digit OTP</label>
-                <input type="text" name="otp" class="form-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 2rem;" required autofocus>
+<div class="auth-wrapper py-5 min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 col-xl-4">
+                <div class="card border-0 shadow-lg auth-card overflow-hidden">
+                    <div class="card-header bg-white border-0 pt-5 pb-0 text-center">
+                        <div class="auth-icon-wrapper mx-auto mb-3" style="background: rgba(16,185,129,.1); color: #10b981;">
+                            <i class="fas fa-user-shield fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">Review Verification</h3>
+                        <p class="text-muted small">Enter the code sent to your medical email</p>
+                    </div>
+                    <div class="card-body p-4 p-lg-5 pt-4">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} border-0 shadow-sm rounded-4 mb-4" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>{{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="bg-light p-3 rounded-4 mb-4 text-center border">
+                            <span class="text-muted small d-block mb-1">Finalizing Review for</span>
+                            <h6 class="fw-bold mb-0">{{ report.patient.username }}</h6>
+                        </div>
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase tracking-wide mb-3 text-center d-block">Enter Verification Code</label>
+                                <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold rounded-4 border-0 bg-light py-3" 
+                                       placeholder="· · · · · ·" maxlength="6" pattern="\d{6}" required autofocus 
+                                       style="letter-spacing: 12px; font-size: 1.8rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-p btn-lg w-100 py-3 rounded-4 shadow-sm fw-bold animate-up">
+                                <i class="fas fa-file-signature me-2"></i>Verify & Submit Review
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-5">
+                            <p class="text-muted mb-0 small">Didn't receive the code? 
+                                <a href="javascript:location.reload()" class="fw-bold text-primary text-decoration-none">Resend Code</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; background: var(--warning); border: none; box-shadow: 0 4px 15px rgba(255, 183, 77, 0.3);">
-                Confirm Review <i class="fas fa-check-double" style="margin-left: 10px;"></i>
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

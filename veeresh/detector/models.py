@@ -13,6 +13,12 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     is_verified = models.BooleanField(default=False)
 
+    # Patient Medical Profile
+    smoking_history = models.CharField(max_length=100, blank=True, null=True)
+    medical_conditions = models.TextField(blank=True, null=True)
+    allergies = models.TextField(blank=True, null=True)
+    current_medications = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.username} ({self.role})"
 
@@ -34,6 +40,7 @@ class LungReport(models.Model):
     review_notes = models.TextField(blank=True, null=True)
     patient_notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Report for {self.patient.username} - {self.result_label}"
@@ -93,6 +100,13 @@ class LungReport(models.Model):
             'precautions': ['Consult your doctor for personalized advice.']
         })
 
+    @property
+    def get_consultation(self):
+        active = self.consultations.filter(status__in=['Requested', 'Scheduled']).first()
+        if active:
+            return active
+        return self.consultations.order_by('-created_at').first()
+
 class UserOTP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     otp_code = models.CharField(max_length=6)
@@ -101,3 +115,39 @@ class UserOTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.user.username}"
+class Consultation(models.Model):
+    STATUS_CHOICES = [
+        ('Requested', 'Requested'),
+        ('Scheduled', 'Scheduled'),
+        ('Completed', 'Completed'),
+        ('Cancelled', 'Cancelled'),
+    ]
+    MODE_CHOICES = [
+        ('Online', 'Online Video Call'),
+        ('Offline', 'In-Person Visit'),
+    ]
+    report = models.ForeignKey(LungReport, on_delete=models.CASCADE, related_name='consultations')
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_consultations')
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_consultations')
+    preferred_date = models.DateField(null=True, blank=True)
+    scheduled_time = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Requested')
+    mode = models.CharField(max_length=10, choices=MODE_CHOICES, default='Online')
+    patient_notes = models.TextField(blank=True, null=True)
+    reminder_sent = models.BooleanField(default=False)
+    next_consultation_date = models.DateField(null=True, blank=True, help_text="Date recommended by doctor for next follow-up")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Consultation for {self.patient.username} with Dr. {self.doctor.username} - {self.status}"
+
+class Prescription(models.Model):
+    consultation = models.OneToOneField(Consultation, on_delete=models.CASCADE, related_name='prescription')
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='issued_prescriptions')
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_prescriptions')
+    medications = models.TextField(help_text="List of medicines, dosages, and frequency")
+    doctor_notes = models.TextField(blank=True, null=True, help_text="Clinical notes, advice, or follow-up instructions")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Prescription for {self.patient.username} by Dr. {self.doctor.username}"

@@ -1,0 +1,192 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}New Scan Analysis | LungQuest AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center text-center mb-5">
+        <div class="col-lg-8">
+            <span class="section-label">Diagnostic Portal</span>
+            <h1 class="display-4 fw-bold">Advanced Lung Analysis</h1>
+            <p class="lead text-secondary">Upload a Chest X-ray for instant dual-model analysis. Our system cross-verifies results across multiple neural networks for maximum precision.</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-premium overflow-hidden" style="border-radius: 2rem; background: #fff;">
+                <div class="row g-0">
+                    <!-- Upload Column -->
+                    <div class="col-md-7 p-4 p-lg-5">
+                        <form method="POST" action="{% url 'upload_scan' %}" enctype="multipart/form-data" id="uploadForm">
+                            {% csrf_token %}
+                            <div class="upload-zone" id="dropZone" onclick="document.getElementById('imageInput').click()">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <h3 class="fw-bold mb-2">Drop scan here</h3>
+                                <p class="text-muted mb-4">or click to browse your files</p>
+                                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 bg-light rounded-pill small text-secondary">
+                                    <i class="fas fa-file-image text-primary"></i>
+                                    JPG, PNG supported
+                                </div>
+                                <input type="file" name="image" id="imageInput" class="d-none" accept="image/*" required>
+                            </div>
+
+                            <div id="previewContainer" class="d-none mt-4">
+                                <div class="position-relative rounded-4 overflow-hidden border" style="max-height: 400px;">
+                                    <img id="imagePreview" src="#" alt="Preview" class="w-100 h-100 object-fit-cover">
+                                    <div class="scan-line" id="scanLine"></div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="form-label fw-bold small text-uppercase">Patient Notes (Optional)</label>
+                                    <textarea name="patient_notes" class="form-control rounded-4 bg-light border-0 p-3" rows="3" placeholder="Symptoms, history, or specific concerns..."></textarea>
+                                </div>
+                                <div class="d-flex gap-3 mt-4">
+                                    <button type="button" class="btn btn-outline-p flex-fill py-3" onclick="window.location.reload()">
+                                        <i class="fas fa-redo me-2"></i>Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-primary-p flex-fill py-3">
+                                        <i class="fas fa-microscope me-2"></i>Analyze Now
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Info Column -->
+                    <div class="col-md-5 bg-light p-4 p-lg-5 border-start">
+                        <h4 class="fw-bold mb-4">Detection Coverage</h4>
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-center gap-3 p-3 bg-white rounded-4 shadow-sm border-start border-4 border-success">
+                                <div class="bg-soft-success rounded-circle p-2"><i class="fas fa-check-circle text-success"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Normal Health</h6>
+                                    <p class="small text-muted mb-0">No symptoms detected</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 p-3 bg-white rounded-4 shadow-sm border-start border-4 border-warning">
+                                <div class="bg-soft-warning rounded-circle p-2"><i class="fas fa-virus text-warning"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Viral Pneumonia</h6>
+                                    <p class="small text-muted mb-0">Lung inflammation</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 p-3 bg-white rounded-4 shadow-sm border-start border-4 border-danger">
+                                <div class="bg-soft-danger rounded-circle p-2"><i class="fas fa-bacteria text-danger"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">COVID-19 / Bacterial</h6>
+                                    <p class="small text-muted mb-0">Severe infections</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 p-4 bg-primary text-white rounded-4 shadow-lg position-relative overflow-hidden">
+                            <div class="header-bg-glow" style="opacity: 0.2;"></div>
+                            <h5 class="fw-bold mb-2">Dual-Model Verification</h5>
+                            <p class="small mb-0 opacity-75">Our ensemble system processes your scan through two distinct neural architectures to minimize false positives.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="analyzingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.85); z-index: 9999; backdrop-filter: blur(8px);">
+    <div class="text-center text-white">
+        <div class="spinner-grow text-primary mb-4" style="width: 4rem; height: 4rem;" role="status"></div>
+        <h2 class="fw-bold">Neural Ensemble Analyzing...</h2>
+        <p class="lead opacity-75">Cross-verifying feature maps across models</p>
+        <div class="progress mt-4 mx-auto" style="width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 100px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="analysisProgress" style="width: 0%"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const input = document.getElementById('imageInput');
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('previewContainer');
+    const dropZone = document.getElementById('dropZone');
+    const form = document.getElementById('uploadForm');
+    const overlay = document.getElementById('analyzingOverlay');
+    const progressBar = document.getElementById('analysisProgress');
+
+    input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                container.classList.remove('d-none');
+                dropZone.classList.add('d-none');
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    form.addEventListener('submit', function() {
+        overlay.classList.remove('d-none');
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+            } else {
+                width += 1.5;
+                progressBar.style.width = width + '%';
+            }
+        }, 100);
+    });
+
+    // Drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        input.files = files;
+        input.dispatchEvent(new Event('change'));
+    }
+</script>
+
+<style>
+    .scan-line {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 4px;
+        background: linear-gradient(to right, transparent, #0ea5e9, transparent);
+        box-shadow: 0 0 15px #0ea5e9;
+        animation: scan 3s linear infinite;
+        z-index: 10;
+        display: none;
+    }
+    #uploadForm:has([type="submit"]:active) .scan-line { display: block; }
+    
+    @keyframes scan {
+        0% { top: 0; }
+        100% { top: 100%; }
+    }
+    
+    .shadow-premium {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}

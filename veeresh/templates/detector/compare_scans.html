@@ -1,0 +1,115 @@
+{% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Scan Comparison | LungQuest AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-5">
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass p-4 rounded-5 shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-soft-primary text-primary p-3 rounded-4">
+                        <i class="fas fa-columns fs-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="fw-bold mb-1">Longitudinal Scan Comparison</h2>
+                        <p class="text-muted small mb-0">Patient: <span class="fw-bold">{{ patient.username }}</span></p>
+                    </div>
+                </div>
+                <a href="{% if user.role == 'doctor' %}{% url 'doctor_dashboard' %}{% else %}{% url 'patient_dashboard' %}{% endif %}" class="btn btn-outline-p rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Most Recent Scan -->
+        {% with latest=scans|first %}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-clock me-2"></i>Most Recent Finding</h6>
+                    <span class="badge bg-primary rounded-pill">{{ latest.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="card-body p-0 bg-black">
+                    <img src="{{ latest.image.url }}" alt="Latest Scan" class="w-100 object-fit-contain" style="height: 500px;">
+                </div>
+                <div class="card-footer bg-white p-4">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <h5 class="fw-bold mb-1" style="color: {% if 'Normal' in latest.result_label %}#10b981{% else %}#ef4444{% endif %};">
+                                {{ latest.result_label }}
+                            </a>
+                            <p class="small text-muted mb-0">Analyzed with {{ latest.confidence|floatformat:1 }}% confidence</p>
+                        </div>
+                        <div class="col-5 text-end">
+                            <div class="small text-muted mb-1">Clinically Reviewed By</div>
+                            <h6 class="fw-bold mb-0">Dr. {{ latest.reviewed_by.username|default:"N/A" }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+
+        <!-- Previous Scan Selector -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2"></i>Compare with Previous</h6>
+                    <select id="previous-scan-selector" class="form-select form-select-sm rounded-pill px-3 border-light bg-light w-auto" onchange="changePreviousScan(this.value)">
+                        {% for scan in scans %}
+                            {% if not forloop.first %}
+                            <option value="{{ scan.id }}">
+                                {{ scan.created_at|date:"M d, Y" }} - {{ scan.result_label }}
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="card-body p-0 bg-black">
+                    {% for scan in scans %}
+                        {% if not forloop.first %}
+                        <div id="prev-scan-{{ scan.id }}" class="prev-scan-container" style="{% if forloop.counter0 != 1 %}display: none;{% endif %}">
+                            <img src="{{ scan.image.url }}" alt="Previous Scan" class="w-100 object-fit-contain" style="height: 500px;">
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="card-footer bg-white p-4">
+                    {% for scan in scans %}
+                        {% if not forloop.first %}
+                        <div id="prev-info-{{ scan.id }}" class="prev-info-container" style="{% if forloop.counter0 != 1 %}display: none;{% endif %}">
+                            <div class="row align-items-center">
+                                <div class="col-7">
+                                    <h5 class="fw-bold mb-1" style="color: {% if 'Normal' in scan.result_label %}#10b981{% else %}#ef4444{% endif %};">
+                                        {{ scan.result_label }}
+                                    </h5>
+                                    <p class="small text-muted mb-0">Analyzed with {{ scan.confidence|floatformat:1 }}% confidence</p>
+                                </div>
+                                <div class="col-5 text-end">
+                                    <div class="small text-muted mb-1">Clinically Reviewed By</div>
+                                    <h6 class="fw-bold mb-0">Dr. {{ scan.reviewed_by.username|default:"N/A" }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function changePreviousScan(scanId) {
+    document.querySelectorAll('.prev-scan-container').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.prev-info-container').forEach(el => el.style.display = 'none');
+    
+    document.getElementById('prev-scan-' + scanId).style.display = 'block';
+    document.getElementById('prev-info-' + scanId).style.display = 'block';
+}
+</script>
+{% endblock %}

@@ -1,49 +1,111 @@
 {% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Clinical Review | LungQuest AI{% endblock %}
 
 {% block content %}
-<div class="container animate-fade">
-    <div style="margin-bottom: 2rem;">
-        <h1 style="font-size: 2.3rem;">Medical <span>Review Assistant</span></h1>
-        <p style="color: var(--text-gray);">Reviewing scan ID #{{ report.id }} for patient {{ report.patient.username }}
-        </p>
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass p-4 rounded-4 shadow-sm d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill mb-2">Diagnostic Review</span>
+                    <h2 class="fw-bold mb-0">Case Review: {{ report.patient.username }}</h2>
+                </div>
+                <div class="text-end">
+                    <p class="text-muted small mb-0">Received: {{ report.created_at|date:"M d, Y" }}</p>
+                    <p class="text-muted small mb-0">Report ID: #LQR-{{ report.id|stringformat:"05d" }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="result-header">
-        <div class="glass-card scan-display" style="flex: 1.5;">
-            <img src="{{ report.image.url }}" alt="Scan for review">
+    <div class="row g-4">
+        <!-- Scan View -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-premium rounded-5 overflow-hidden sticky-top" style="top: 100px;">
+                <div class="card-header bg-dark text-white text-center py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-expand me-2"></i>Full Resolution Scan</h6>
+                </div>
+                <div class="card-body p-0 bg-black">
+                    <img src="{{ report.image.url }}" class="img-fluid w-100" alt="Scan Image" style="max-height: 600px; object-fit: contain;">
+                </div>
+                <div class="card-footer bg-light p-4">
+                    <h6 class="fw-bold small text-uppercase text-muted mb-3">AI Findings</h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="display-6 fw-bold text-primary">{{ report.result_label }}</div>
+                        <div class="badge bg-primary rounded-pill px-3 py-2">{{ report.confidence|floatformat:1 }}% Confidence</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="glass-card" style="flex: 1; height: fit-content;">
-            <h3 style="margin-bottom: 1.5rem;">Clinical Assessment</h3>
-            <p style="margin-bottom: 0.5rem; color: var(--text-gray);">AI Primary Finding: <strong
-                    style="color: white;">{{ report.result_label }} ({{ report.confidence|floatformat:1 }}%)</strong>
-            </p>
-
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group" style="margin-top: 2rem;">
-                    <label>Action Choice</label>
-                    <select name="action" class="form-input">
-                        <option value="Approved">Approve AI Findings</option>
-                        <option value="Rejected">Reject / Requires Re-scan</option>
-                    </select>
+        <!-- Review Controls -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-5 p-4 p-md-5">
+                <h4 class="fw-bold mb-4">Clinical Assessment</h4>
+                
+                <div class="mb-4">
+                    <h6 class="fw-bold small text-uppercase text-muted mb-3">Clinical Context</h6>
+                    <div class="p-3 bg-light rounded-4 border-start border-4 border-primary mb-3">
+                        <label class="small text-muted fw-bold text-uppercase d-block mb-1">Patient Report Notes</label>
+                        <p class="mb-0 italic">"{{ report.patient_notes|default:'No specific notes provided.' }}"</p>
+                    </div>
+                    
+                    <div class="p-3 bg-soft-primary rounded-4 border border-primary border-opacity-10">
+                        <label class="small text-primary fw-bold text-uppercase d-block mb-2"><i class="fas fa-id-card-alt me-1"></i> Medical History Profile</label>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="d-block small text-muted">Smoking History</span>
+                                <span class="fw-bold small">{{ report.patient.smoking_history|default:"Not Provided" }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="d-block small text-muted">Allergies</span>
+                                <span class="fw-bold small">{{ report.patient.allergies|default:"None Reported" }}</span>
+                            </div>
+                            <div class="col-12">
+                                <span class="d-block small text-muted">Chronic Conditions</span>
+                                <span class="fw-bold small">{{ report.patient.medical_conditions|default:"No chronic conditions reported." }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Clinical Description / Medical Remarks (Mandatory)</label>
-                    <textarea name="notes" class="form-input" rows="4" placeholder="Enter findings and justification for approval/rejection..." required></textarea>
-                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Clinical Decision</label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <input type="radio" class="btn-check" name="action" id="action-approve" value="Approved" checked>
+                                <label class="btn btn-outline-success btn-lg w-100 py-3 rounded-4 d-flex flex-column align-items-center" for="action-approve">
+                                    <i class="fas fa-check-circle mb-2 fs-4"></i>
+                                    Approve Finding
+                                </label>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="radio" class="btn-check" name="action" id="action-reject" value="Rejected">
+                                <label class="btn btn-outline-danger btn-lg w-100 py-3 rounded-4 d-flex flex-column align-items-center" for="action-reject">
+                                    <i class="fas fa-exclamation-triangle mb-2 fs-4"></i>
+                                    Flag Anomalies
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                <div
-                    style="background: rgba(255, 183, 77, 0.1); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; border-left: 3px solid var(--warning);">
-                    <p style="font-size: 0.85rem; color: var(--warning);">Security Note: You will be asked to verify
-                        your identity via OTP to finalize this review.</p>
-                </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Physician's Notes & Advice</label>
+                        <textarea name="notes" class="form-control rounded-4 bg-light border-0 p-3" rows="6" placeholder="Enter detailed clinical notes, recommended next steps, or prescription advice..." required></textarea>
+                        <div class="form-text text-muted small mt-2">These notes will be included in the patient's finalized PDF report.</div>
+                    </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1.2rem;">
-                    Sign & Verify Review <i class="fas fa-signature" style="margin-left: 10px;"></i>
-                </button>
-            </form>
+
+
+                    <button type="submit" class="btn btn-primary-p btn-lg w-100 py-3 rounded-4 shadow-sm animate-up fw-bold">
+                        <i class="fas fa-signature me-2"></i>Finalize Review
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Prescription - {{ prescription.patient.username }}</title>
+<style>
+    body {
+        font-family: Helvetica, sans-serif;
+        color: #333;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+    }
+    .header {
+        border-bottom: 2px solid #0061ff;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    .clinic-name {
+        font-size: 28px;
+        font-weight: bold;
+        color: #0061ff;
+        margin: 0;
+    }
+    .doctor-info {
+        font-size: 14px;
+        color: #555;
+    }
+    .patient-details {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 30px;
+    }
+    .rx-symbol {
+        font-size: 48px;
+        font-weight: bold;
+        font-family: serif;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    .section-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+    }
+    .content-box {
+        margin-bottom: 30px;
+        white-space: pre-wrap;
+    }
+    .footer {
+        margin-top: 50px;
+        text-align: right;
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="clinic-name">LungQuest Clinical Center</h1>
+        <div class="doctor-info">
+            <strong>Dr. {{ prescription.doctor.username }}</strong><br>
+            {{ prescription.doctor.specialization|default:"Pulmonologist" }}<br>
+            License: {{ prescription.doctor.license_number|default:"N/A" }}<br>
+            Date: {{ prescription.created_at|date:"M d, Y" }}
+        </div>
+    </div>
+
+    <div class="patient-details">
+        <strong>Patient Name:</strong> {{ prescription.patient.username }}<br>
+        <strong>Consultation ID:</strong> {{ prescription.consultation.id }}<br>
+    </div>
+
+    <div class="rx-symbol">℞</div>
+
+    <div class="section-title">Medications</div>
+    <div class="content-box">
+{{ prescription.medications }}
+    </div>
+
+    {% if prescription.doctor_notes %}
+    <div class="section-title">Clinical Notes & Follow-up Advice</div>
+    <div class="content-box">
+{{ prescription.doctor_notes }}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p><strong>Dr. {{ prescription.doctor.username }}</strong></p>
+        <p><em>Electronically Signed</em></p>
+    </div>
+
+</body>
+</html>

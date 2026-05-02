@@ -1,201 +1,357 @@
 {% extends 'detector/base.html' %}
 {% load static %}
 
+{% block title %}Diagnostic Result | Analysis Summary{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    /* Hide navigation, footer, back buttons, toasts, and all interactive buttons */
+    .navbar, footer, .toast-container, .btn, button, a.btn, .text-decoration-none.text-muted.small {
+        display: none !important;
+    }
+    
+    /* Reset page and container styling */
+    body, html {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .container, .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Flatten cards to remove shadows and reduce margins */
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        margin-bottom: 10px !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .card-body, .card-header {
+        padding: 10px !important;
+    }
+    
+    /* Optimize flexbox to stay on one row */
+    .row {
+        page-break-inside: avoid !important;
+    }
+
+    /* Resize the main scan image */
+    .card-body.p-0.bg-black {
+        min-height: auto !important;
+        background: white !important;
+    }
+    .img-fluid {
+        max-height: 250px !important;
+        width: auto !important;
+    }
+
+    /* Remove the large "Diagnostic Next Steps" gradient section to save space */
+    .bg-gradient-dark {
+        display: none !important;
+    }
+
+    /* Reduce vertical padding universally */
+    .py-5, .py-4, .mb-5, .mb-4 {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Text sizing */
+    h2, h3 { font-size: 1.5rem !important; }
+    h4, h5 { font-size: 1.2rem !important; }
+    p, span, div { font-size: 12px !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container animate-fade">
-    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
-            <div class="badge" style="background: var(--primary-glow); color: var(--primary); margin-bottom: 1rem;">Clinical Diagnostic Report #{{ report.id }}</div>
-            <h1 style="font-size: 2.5rem;">Diagnostic <span>Results</span></h1>
-        </div>
-        <div class="nav-btns">
-            {% if report.status == 'Unrequested' %}
-                <a href="{% url 'request_approval' report.id %}" class="btn btn-primary" style="margin-right: 10px; background: var(--warning); border: none;">
-                    <i class="fas fa-paper-plane" style="margin-right: 10px;"></i> Request Doctor Approval
-                </a>
-            {% elif report.status == 'Pending' %}
-                <div class="badge" style="background: var(--warning); color: white; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 12px; margin-right: 10px;">
-                    <i class="fas fa-clock" style="margin-right: 10px;"></i> Awaiting Doctor Review
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Professional Header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 border-bottom pb-4 gap-3">
+                <div>
+                    <span class="badge bg-primary mb-2 px-3 py-2 rounded-pill shadow-sm">AI Dual-Model Analysis v3.0</span>
+                    <h2 class="fw-bold mb-0">Diagnostic Summary Report</h2>
                 </div>
-            {% endif %}
-
-            <a href="{% url 'email_report' report.id %}" class="btn btn-primary" style="margin-right: 10px;">
-                <i class="fas fa-envelope" style="margin-right: 10px;"></i> Send to Email
-            </a>
-            <a href="{% url 'report_pdf' report.id %}" target="_blank" class="btn btn-outline" style="margin-right: 10px;">
-                <i class="fas fa-file-pdf" style="margin-right: 10px;"></i> Export PDF
-            </a>
-            {% if report.status == 'Approved' %}
-                <div class="badge" style="background: var(--success); color: white; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 12px;">
-                    <i class="fas fa-check-double" style="margin-right: 10px;"></i> Verified by Dr. {{ report.reviewed_by.username }}
+                <div class="text-md-end">
+                    <p class="text-muted small mb-0">Analysis Date: {{ report.created_at|date:"M d, Y · H:i" }}</p>
+                    <p class="text-muted small mb-0">Record ID: #LQR-{{ report.id|stringformat:"05d" }}</p>
                 </div>
-            {% elif report.status == 'Rejected' %}
-                <div class="badge" style="background: var(--error); color: white; padding: 0.8rem 1.5rem; font-size: 1rem; border-radius: 12px;">
-                    <i class="fas fa-times-circle" style="margin-right: 10px;"></i> Rejected by Dr. {{ report.reviewed_by.username }}
-                </div>
-            {% endif %}
-        </div>
-    </div>
+            </div>
 
-    {% if report.status == 'Approved' %}
-        <div class="glass-card animate-fade" style="background: rgba(56, 161, 105, 0.05); border-color: var(--success); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
-            <div style="width: 50px; height: 50px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
-                <i class="fas fa-user-md"></i>
-            </div>
-            <div>
-                <h4 style="color: var(--success);">CLINICALLY VERIFIED REPORT</h4>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">This report has been reviewed and validated by Dr. {{ report.reviewed_by.username }}.</p>
-            </div>
-        </div>
-    {% elif report.status == 'Rejected' %}
-        <div class="glass-card animate-fade" style="background: rgba(229, 62, 62, 0.05); border-color: var(--error); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
-            <div style="width: 50px; height: 50px; background: var(--error); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
-                <i class="fas fa-ban"></i>
-            </div>
-            <div>
-                <h4 style="color: var(--error);">REPORT REJECTED / INVALIDATED</h4>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Dr. {{ report.reviewed_by.username }} has rejected this finding. Please read the clinical notes below.</p>
-            </div>
-        </div>
-    {% else %}
-        <div class="glass-card animate-fade" style="background: rgba(229, 62, 62, 0.05); border-color: var(--error); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
-            <div style="width: 50px; height: 50px; background: var(--error); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div>
-                <h4 style="color: var(--error);">NOT VERIFIED BY MEDICAL PROFESSIONAL</h4>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">This is an AI-generated finding. It has not been reviewed by a licensed doctor yet.</p>
-            </div>
-        </div>
-    {% endif %}
-
-
-    <div class="result-header" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px;">
-        <!-- Scan Visual -->
-        <div class="glass-card scan-display" style="height: fit-content;">
-            <h3 style="margin-bottom: 1.5rem; color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Input X-Ray Scan</h3>
-            <img src="{{ report.image.url }}" alt="Patient Lung X-Ray" style="width: 100%; border-radius: 12px; margin-bottom: 1rem;">
-            <div style="padding: 1rem; text-align: center; color: var(--text-gray); font-size: 0.8rem; background: rgba(0,0,0,0.05); border-radius: 8px;">
-                <i class="fas fa-microscope" style="margin-right: 5px;"></i> Dual-model ensemble analysis complete.
-            </div>
-        </div>
-
-        <!-- AI Metrics Comparison -->
-        <div class="result-info">
-            <!-- Ensemble Consensus Card -->
-            <div class="glass-card" style="margin-bottom: 2rem; border-left: 6px solid var(--primary); background: linear-gradient(135deg, rgba(0, 97, 255, 0.05) 0%, rgba(0, 198, 255, 0.05) 100%);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="font-size: 1.8rem; color: var(--primary);">System Consensus: {{ report.result_label }}</h2>
-                    <div class="badge" style="background: {{ clinical_info.badge_color }}; color: white; padding: 0.5rem 1rem;">{{ clinical_info.severity }} Severity</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem;">
-                    <span style="color: var(--text-gray); font-size: 1.1rem;">Aggregated Confidence: <strong>{{ report.confidence|floatformat:2 }}%</strong></span>
-                </div>
-                
-                <h3 style="margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted);">Ensemble Probability Distribution</h3>
-                {% for label, prob in predictions.items %}
-                    <div style="margin-bottom: 1.2rem;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
-                            <span style="font-weight: 500;">{{ label }}</span>
-                            <span style="color: var(--primary); font-weight: 600;">{{ prob|floatformat:1 }}%</span>
+            <div class="row g-4 mb-5">
+                <!-- Scan Visualization -->
+                <div class="col-md-5">
+                    <div class="card border-0 shadow-premium rounded-5 overflow-hidden">
+                        <div class="card-header bg-dark text-white text-center py-3">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-microscope me-2"></i>Clinical Input Scan</h6>
                         </div>
-                        <div class="confidence-bar-container" style="height: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; overflow: hidden;">
-                            <div class="confidence-bar" style="width: {{ prob }}%; height: 100%; background: {% if label == report.result_label %}var(--primary){% else %}#cbd5e0{% endif %}; transition: width 1.5s ease-out;"></div>
+                        <div class="card-body p-0 bg-black d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                            <img src="{{ report.image.url }}" class="img-fluid" alt="Lung Scan">
+                        </div>
+                        <div class="card-footer bg-light text-center py-2">
+                            <span class="extra-small text-muted">Figure 1: Original Chest X-Ray / CT Slice</span>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-
-            <!-- Individual Model Comparison -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <!-- Model 1: TensorFlow/CNN -->
-                <div class="glass-card" style="padding: 1.5rem;">
-                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"><i class="fas fa-mobile-alt"></i> MODEL A (MobileNet)</h4>
-                    {% if model_tf_results %}
-                        {% with label_tf=report.result_label %}
-                            {% for label, prob in model_tf_results.items %}
-                                <div style="margin-bottom: 0.8rem;">
-                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
-                                        <span>{{ label }}</span>
-                                        <span>{{ prob|floatformat:1 }}%</span>
-                                    </div>
-                                    <div style="height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px;">
-                                        <div style="width: {{ prob }}%; height: 100%; background: #4a5568; border-radius: 2px;"></div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% endwith %}
-                    {% else %}
-                        <p style="font-size: 0.8rem; color: var(--error);">Model A unavailable.</p>
-                    {% endif %}
                 </div>
 
-                <!-- Model 2: PyTorch/ResNet -->
-                <div class="glass-card" style="padding: 1.5rem;">
-                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"><i class="fas fa-microchip"></i> MODEL B (PT-ResNet)</h4>
-                    {% if model_pt_results %}
-                        {% for label, prob in model_pt_results.items %}
-                            <div style="margin-bottom: 0.8rem;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
-                                    <span>{{ label }}</span>
-                                    <span>{{ prob|floatformat:1 }}%</span>
+                <!-- Analysis Summary -->
+                <div class="col-md-7">
+                    <div class="card border-0 shadow-premium rounded-5 h-100 p-4">
+                        <div class="text-center mb-4">
+                            <div class="mx-auto bg-soft-primary p-3 rounded-circle mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-lungs fs-1 text-primary"></i>
+                            </div>
+                            <h4 class="text-muted small fw-bold text-uppercase mb-1">AI Ensemble Finding</h4>
+                            <h2 class="fw-bold display-6 mb-2" style="color: {{ clinical_info.badge_color|default:'#0ea5e9' }};">{{ report.result_label }}</h2>
+                            <div class="d-flex justify-content-center gap-2 mb-3">
+                                <span class="badge rounded-pill px-3 py-2" style="background-color: {{ clinical_info.badge_color|default:'#0ea5e9' }};">{{ report.confidence|floatformat:1 }}% Confidence</span>
+                                <span class="badge border rounded-pill px-3 py-2" style="color: {{ clinical_info.badge_color|default:'#0ea5e9' }}; border-color: {{ clinical_info.badge_color|default:'#0ea5e9' }} !important;">Severity: {{ clinical_info.severity }}</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-light p-4 rounded-4 mb-4">
+                            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Diagnostic Insight</h6>
+                            <p class="mb-0 small text-secondary" style="line-height: 1.6;">{{ clinical_info.description }}</p>
+                        </div>
+
+                        <!-- Ensemble Distribution -->
+                        <h6 class="fw-bold mb-3 small text-uppercase text-muted">Model Probability Mapping</h6>
+                        <div class="d-grid gap-3">
+                            {% for label, prob in predictions.items %}
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="fw-bold {% if label == report.result_label %}text-primary{% else %}text-muted{% endif %}">{{ label }}</span>
+                                    <span class="text-muted">{{ prob|floatformat:1 }}%</span>
                                 </div>
-                                <div style="height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px;">
-                                    <div style="width: {{ prob }}%; height: 100%; background: #4a5568; border-radius: 2px;"></div>
+                                <div class="progress rounded-pill shadow-none bg-light" style="height: 6px;">
+                                    <div class="progress-bar {% if label == report.result_label %}bg-primary{% else %}bg-secondary opacity-25{% endif %} progress-bar-striped progress-bar-animated" 
+                                         style="width: {{ prob }}%"></div>
                                 </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <p style="font-size: 0.8rem; color: var(--error);">Model B unavailable.</p>
-                    {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Clinical Insights -->
-    <div class="glass-card" style="margin-top: 2rem; background: rgba(255, 255, 255, 0.7); border-color: var(--primary-glow);">
-        <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-notes-medical" style="color: var(--primary); margin-right: 10px;"></i> Detailed Clinical Insight</h3>
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px;">
-            <div>
-                <p style="color: var(--text-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">{{ clinical_info.description }}</p>
-                {% if report.review_notes %}
-                    <div style="background: rgba(56, 161, 105, 0.1); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success);">
-                        <h4 style="color: var(--success); margin-bottom: 0.5rem;"><i class="fas fa-user-check"></i> Physician's Clinical Remarks:</h4>
-                        <p style="font-style: italic; color: var(--text-gray); font-size: 1.05rem;">"{{ report.review_notes }}"</p>
+            <!-- Precautionary Advice -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                        <h5 class="fw-bold mb-4"><i class="fas fa-shield-virus text-primary me-2"></i>Recommended Precautions</h5>
+                        <div class="row g-3">
+                            {% for precaution in clinical_info.precautions %}
+                            <div class="col-md-6">
+                                <div class="d-flex gap-3 align-items-start p-3 rounded-3 bg-light">
+                                    <div class="text-primary mt-1"><i class="fas fa-check-circle"></i></div>
+                                    <p class="small mb-0 text-secondary">{{ precaution }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                {% endif %}
+                </div>
             </div>
-            <div style="background: var(--primary-light); padding: 2rem; border-radius: 16px; border: 1px solid var(--primary-glow);">
-                <h4 style="color: var(--primary); margin-bottom: 1.5rem;"><i class="fas fa-shield-virus" style="margin-right: 10px;"></i> Protocol & Precautions</h4>
-                <ul style="list-style: none; padding: 0;">
-                    {% for p in clinical_info.precautions %}
-                        <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
-                            <i class="fas fa-check-circle" style="color: var(--primary); margin-top: 4px; font-size: 0.9rem;"></i>
-                            <span style="color: var(--text-gray); font-size: 0.95rem;">{{ p }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
 
-    <!-- Recommendations -->
-    <div class="dashboard-grid">
-        <div class="glass-card">
-            <h4><i class="fas fa-procedures" style="color: var(--primary); margin-right: 10px;"></i> Next Steps</h4>
-            <ul style="margin-top: 1rem; font-size: 0.95rem; color: var(--text-gray); display: flex; flex-direction: column; gap: 10px;">
-                <li>Consult a Pulmonologist for clinical correlation.</li>
-                <li>Compare with previous radiological history.</li>
-                <li>Routine follow-up in 14 days if symptoms persist.</li>
-            </ul>
-        </div>
-        <div class="glass-card">
-            <h4><i class="fas fa-notes-medical" style="color: var(--primary); margin-right: 10px;"></i> Medical Disclaimer</h4>
-            <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-gray);">
-                This AI-generated analysis is for informational purposes only and should not replace professional medical advice. Always verify results with a licensed healthcare provider.
-            </p>
+            <!-- Clinical Review Section -->
+            {% if report.status != 'Unrequested' %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-soft-primary border-0 p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-user-md me-2"></i>Clinical Physician Review</h5>
+                                <span class="badge {% if report.status == 'Approved' %}bg-success{% elif report.status == 'Rejected' %}bg-danger{% else %}bg-warning{% endif %} rounded-pill px-3">
+                                    {{ report.status|upper }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-auto mb-3 mb-md-0">
+                                    <div class="avatar-lg bg-light text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                                        <i class="fas fa-user-doctor"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md">
+                                    {% if report.reviewed_by %}
+                                        <h6 class="fw-bold mb-1">Dr. {{ report.reviewed_by.username }}</h6>
+                                        <p class="text-muted small mb-2">{{ report.reviewed_by.specialization|default:"Lead Specialist" }} | License: {{ report.reviewed_by.license_number|default:"Verified" }}</p>
+                                        <p class="text-muted small mb-0"><i class="fas fa-calendar-check me-1"></i>Reviewed on {{ report.reviewed_at|date:"M d, Y" }}</p>
+                                    {% elif report.requested_doctor %}
+                                        <h6 class="fw-bold mb-1">Assigned to Dr. {{ report.requested_doctor.username }}</h6>
+                                        <p class="text-muted small mb-0">The physician has been notified and is currently reviewing your case.</p>
+                                    {% else %}
+                                        <h6 class="fw-bold mb-1">Clinical Queue</h6>
+                                        <p class="text-muted small mb-0">Your scan is in the priority queue for the next available medical officer.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if report.review_notes %}
+                            <div class="mt-4 p-3 rounded-4 bg-light border-start border-primary border-4">
+                                <h6 class="fw-bold mb-2 small text-uppercase text-muted"><i class="fas fa-comment-medical me-2"></i>Doctor's Message</h6>
+                                <p class="mb-0 text-dark" style="white-space: pre-line;">{{ report.review_notes }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Section -->
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg rounded-5 p-4 p-md-5 bg-gradient-dark text-white overflow-hidden position-relative">
+                        <div class="row align-items-center position-relative" style="z-index: 2;">
+                            <div class="col-md-8">
+                                <h3 class="fw-bold mb-2 text-white">Diagnostic Next Steps</h3>
+                                <p class="opacity-75 mb-0">
+                                    {% if report.status == 'Unrequested' %}
+                                        Request a clinical verification to confirm these AI findings with a licensed specialist.
+                                    {% elif report.status == 'Rejected' or report.status == 'Approved' and report.result_label != 'Normal' %}
+                                        Your findings have been verified. You can now book a follow-up consultation with your doctor.
+                                    {% else %}
+                                        AI findings are for diagnostic support. Clinical correlation with ongoing symptoms is advised.
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                                {% if report.status == 'Unrequested' %}
+                                <button class="btn btn-primary-p btn-lg rounded-pill px-5 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#requestModal-{{ report.id }}">
+                                    <i class="fas fa-stethoscope me-2"></i>Request Review
+                                </button>
+                                {% elif report.status == 'Rejected' or report.status == 'Approved' and report.result_label != 'Normal' %}
+                                    {% with consultation=report.get_consultation %}
+                                        {% if not consultation or consultation.status == 'Completed' or consultation.status == 'Cancelled' %}
+                                        <a href="{% url 'book_consultation' report.id %}" class="btn btn-primary-p btn-lg rounded-pill px-5 fw-bold shadow">
+                                            <i class="fas fa-calendar-plus me-2"></i>Book Follow-up
+                                        </a>
+                                        {% else %}
+                                        <div class="badge bg-light text-dark rounded-pill px-4 py-3 border-0">
+                                            <i class="fas fa-check-circle me-2 text-success"></i>{{ consultation.status }}
+                                        </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                <div class="badge bg-light text-dark rounded-pill px-4 py-3 border-0">
+                                    <i class="fas fa-info-circle me-2 text-primary"></i>{{ report.status }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="header-bg-glow" style="opacity: 0.1;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Buttons -->
+            <div class="text-center mt-5 d-flex flex-wrap gap-3 justify-content-center">
+                <a href="{% url 'home' %}" class="btn btn-outline-p btn-lg rounded-pill px-4">
+                    <i class="fas fa-redo me-2"></i>New Analysis
+                </a>
+                <a href="{% url 'report_pdf' report.id %}" class="btn btn-outline-success btn-lg rounded-pill px-4">
+                    <i class="fas fa-file-pdf me-2"></i>Download PDF
+                </a>
+                <a href="{% url 'email_report' report.id %}" class="btn btn-outline-info btn-lg rounded-pill px-4">
+                    <i class="fas fa-envelope me-2"></i>Email Report
+                </a>
+                <button onclick="window.print()" class="btn btn-dark btn-lg rounded-pill px-4">
+                    <i class="fas fa-print me-2"></i>Print
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Request Review Modal (if unrequested) -->
+{% if report.status == 'Unrequested' %}
+<div class="modal fade" id="requestModal-{{ report.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'request_approval' report.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold px-3 pt-3 mb-0">Select Specialist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">Request a clinical review from one of our verified specialists.</p>
+                    <div class="doctor-selection-list mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Default Option -->
+                        <div class="form-check doctor-option-card p-0 mb-2">
+                            <input class="form-check-input d-none" type="radio" name="doctor_id" id="doc-auto" value="" checked>
+                            <label class="form-check-label d-block p-3 rounded-4 border-2 border-light bg-light cursor-pointer" for="doc-auto">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-sm bg-soft-secondary text-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-random"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">First Available Doctor</h6>
+                                        <p class="extra-small text-muted mb-0">Priority queue for fastest response</p>
+                                    </div>
+                                    <i class="fas fa-check-circle ms-auto text-primary check-icon"></i>
+                                </div>
+                            </label>
+                        </div>
+
+                        {% for doctor in available_doctors %}
+                        <div class="form-check doctor-option-card p-0 mb-2">
+                            <input class="form-check-input d-none" type="radio" name="doctor_id" id="doc-{{ doctor.id }}" value="{{ doctor.id }}">
+                            <label class="form-check-label d-block p-3 rounded-4 border-2 border-light bg-light cursor-pointer" for="doc-{{ doctor.id }}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-sm bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Dr. {{ doctor.username }}</h6>
+                                        <p class="extra-small text-muted mb-0">{{ doctor.specialization|default:"Lead Specialist" }}</p>
+                                    </div>
+                                    <i class="fas fa-check-circle ms-auto text-primary check-icon"></i>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <style>
+                        .doctor-option-card input:checked + label {
+                            border-color: #3b82f6 !important;
+                            background-color: #eff6ff !important;
+                        }
+                        .doctor-option-card .check-icon {
+                            display: none;
+                        }
+                        .doctor-option-card input:checked + label .check-icon {
+                            display: block;
+                        }
+                        .cursor-pointer {
+                            cursor: pointer;
+                        }
+                        .extra-small {
+                            font-size: 0.75rem;
+                        }
+                    </style>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 gap-2">
+                    <button type="button" class="btn btn-outline-p flex-fill rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-p flex-fill rounded-pill shadow-sm">Confirm Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,192 +1,592 @@
 {% extends 'detector/base.html' %}
 {% load static %}
 
+{% block title %}Patient Portal | My Clinical Workspace{% endblock %}
+
 {% block content %}
-<div class="dashboard-header animate-fade">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Patient <span>Dashboard</span></h1>
-            <p>Manage your health scans and diagnostic history.</p>
+<div class="container-fluid px-lg-5 py-4">
+    
+    <!-- Header Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass p-4 p-md-5 rounded-4 shadow-lg position-relative overflow-hidden patient-header-card">
+                <div class="patient-header-accent"></div>
+                <div class="header-bg-glow"></div>
+                <div class="position-relative z-1 d-flex flex-column flex-md-row justify-content-between w-100 align-items-md-center gap-4">
+                    <div>
+                        <div class="patient-role-strip"><span class="patient-dot"></span><i class="fas fa-heartbeat me-1"></i>Patient Health Portal</div>
+                        <h1 class="fw-bold mb-2 text-gradient">My Health Dashboard</h1>
+                        <p class="text-secondary mb-0 fw-medium">
+                            <i class="fas fa-id-card me-2 text-primary"></i>WELCOME BACK, {{ user.username|upper }} 
+                            <span class="mx-2 text-muted">|</span> 
+                            Patient ID: #{{ user.id|add:1000 }}
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex gap-3">
+                        {% if reports.count > 0 %}
+                        <div class="stat-card glass-panel text-center px-4 py-3 shadow-sm rounded-4">
+                            <span class="d-block text-uppercase fw-bold text-muted small mb-1" style="letter-spacing: 1px;">Total Scans</span>
+                            <span class="d-block fw-bold text-primary fs-3">{{ reports.count }}</span>
+                        </div>
+                        {% endif %}
+                        {% if normal_count > 0 %}
+                        <div class="stat-card glass-panel text-center px-4 py-3 shadow-sm rounded-4">
+                            <span class="d-block text-uppercase fw-bold text-muted small mb-1" style="letter-spacing: 1px;">Normal Result</span>
+                            <span class="d-block fw-bold text-success fs-3">{{ normal_count }}</span>
+                        </div>
+                        {% endif %}
+                        {% if pending_count > 0 %}
+                        <div class="stat-card glass-panel text-center px-4 py-3 shadow-sm rounded-4">
+                            <span class="d-block text-uppercase fw-bold text-muted small mb-1" style="letter-spacing: 1px;">Pending Scans</span>
+                            <span class="d-block fw-bold text-warning fs-3">{{ pending_count }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                </div>
+            </div>
         </div>
-        <div class="nav-btns">
-            {% if user.is_superuser %}
-                <a href="{% url 'user_management' %}" class="btn btn-outline" style="background: rgba(0,0,0,0.1); border: 1px solid white; color: white; margin-right: 10px;">
-                    <i class="fas fa-users-cog"></i> Admin Panel
-                </a>
-            {% endif %}
-            <button onclick="document.getElementById('scan-upload').click()" class="btn" style="background: white; color: var(--primary);">
-                <i class="fas fa-plus-circle" style="margin-right: 10px;"></i> New Lung Scan
-            </button>
-            <form id="upload-form" method="POST" action="{% url 'upload_scan' %}" enctype="multipart/form-data" style="display: none;">
+    </div>
+
+    <!-- Navigation Tab Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="patient-tab-bar d-flex align-items-center gap-2 px-1 py-1">
+                <ul class="nav nav-pills gap-2 border-0 flex-wrap" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-records-tab" data-bs-toggle="pill" data-bs-target="#pills-records" type="button" role="tab">
+                            <i class="fas fa-file-medical me-2"></i>Diagnostic Records
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-consults-tab" data-bs-toggle="pill" data-bs-target="#pills-consults" type="button" role="tab">
+                            <i class="fas fa-video me-2"></i>Consultation Hub
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm" id="pills-prescriptions-tab" data-bs-toggle="pill" data-bs-target="#pills-prescriptions" type="button" role="tab">
+                            <i class="fas fa-prescription me-2"></i>Prescription Box
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="pills-tabContent">
+                
+                <!-- Tab: Diagnostic Records -->
+                <div class="tab-pane fade show active" id="pills-records" role="tabpanel">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-soft-primary p-2 me-3 rounded-3 shadow-sm">
+                                <i class="fas fa-list-ul text-primary"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0">Medical History</h3>
+                        </div>
+                        <a href="{% url 'home' %}" class="btn btn-primary-p rounded-pill px-4 shadow-sm">
+                            <i class="fas fa-plus me-2"></i>New Scan
+                        </a>
+                    </div>
+
+                    {% if reports %}
+                        {% for report in reports %}
+                        <div class="case-card premium-hover rounded-4 p-4 mb-3 bg-white border-0 shadow-sm position-relative overflow-hidden">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
+                                <div class="d-flex gap-4 align-items-center mb-3 mb-md-0">
+                                    <div class="scan-thumb rounded-3 overflow-hidden shadow-sm" style="width: 70px; height: 70px;">
+                                        <img src="{{ report.image.url }}" class="w-100 h-100 object-fit-cover" alt="Scan">
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <h5 class="fw-bold mb-0 text-dark">Report #{{ report.id }}</h5>
+                                            {% if report.status == 'Unrequested' %}
+                                                <span class="badge bg-soft-secondary text-secondary rounded-pill px-2 py-1 small">Local Draft</span>
+                                            {% elif report.status == 'Pending' %}
+                                                <span class="badge bg-soft-warning text-warning rounded-pill px-2 py-1 small">Under Review</span>
+                                            {% elif report.status == 'Approved' %}
+                                                <span class="badge bg-soft-success text-success rounded-pill px-2 py-1 small">Verified</span>
+                                            {% elif report.status == 'Rejected' %}
+                                                <span class="badge bg-soft-danger text-danger rounded-pill px-2 py-1 small">Rejected</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-muted small mb-0">
+                                            <i class="fas fa-calendar-alt me-1"></i> {{ report.created_at|date:"F d, Y" }}
+                                            <span class="mx-1">•</span>
+                                            <i class="fas fa-robot text-primary me-1"></i> {{ report.result_label }}
+                                            {% if report.reviewed_by or report.requested_doctor %}
+                                                <span class="mx-1">•</span>
+                                                <i class="fas fa-user-md text-info me-1"></i> 
+                                                {% if report.reviewed_by %}
+                                                    Dr. {{ report.reviewed_by.username }}
+                                                {% else %}
+                                                    Dr. {{ report.requested_doctor.username }}
+                                                {% endif %}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <a href="{% url 'report_detail' report.id %}" class="btn btn-soft-primary rounded-pill px-3 btn-sm" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if report.status == 'Unrequested' %}
+                                        <button class="btn btn-primary-p rounded-pill px-3 btn-sm" data-bs-toggle="modal" data-bs-target="#requestModal-{{ report.id }}" title="Request Review">
+                                            <i class="fas fa-stethoscope"></i>
+                                        </button>
+                                        {% endif %}
+                                        {% if report.status == 'Approved' %}
+                                        <a href="{% url 'report_pdf' report.id %}" class="btn btn-soft-success rounded-pill px-3 btn-sm" title="Download PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        {% endif %}
+
+                                    </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5 glass rounded-4">
+                            <div class="mb-4">
+                                <i class="fas fa-file-medical-alt fa-3x text-muted opacity-25"></i>
+                            </div>
+                            <h5 class="text-secondary">No Diagnostic Records Found</h5>
+                            <p class="text-muted small">Upload your first scan to start your clinical journey.</p>
+                            <a href="{% url 'home' %}" class="btn btn-primary-p rounded-pill px-4 mt-2">Upload Scan</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tab: Consultation Hub -->
+                <div class="tab-pane fade" id="pills-consults" role="tabpanel">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-box bg-soft-success p-2 me-3 rounded-3 shadow-sm">
+                            <i class="fas fa-calendar-check text-success"></i>
+                        </div>
+                        <h3 class="fw-bold mb-0">Consultation Hub</h3>
+                    </div>
+
+                    <!-- Next Eligible Consultations Section -->
+                    {% if eligible_reports %}
+                    <div class="mb-5">
+                        <h5 class="fw-bold mb-3 text-dark"><i class="fas fa-calendar-plus text-primary me-2"></i>Book Next Consultation</h5>
+                        <div class="row g-3">
+                            {% for item in eligible_reports %}
+                            <div class="col-12">
+                                <div class="glass p-4 rounded-4 shadow-sm border-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Report #{{ item.report.id }} - {{ item.report.result_label }}</h6>
+                                        {% if item.is_ready %}
+                                        <p class="text-success small mb-0"><i class="fas fa-check-circle me-1"></i> Eligible for booking now</p>
+                                        {% else %}
+                                        <p class="text-warning small mb-0"><i class="fas fa-clock me-1"></i> Eligible on {{ item.next_date|date:"F d, Y" }} (in {{ item.days_remaining }} days)</p>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if item.is_ready %}
+                                        <a href="{% url 'book_consultation' item.report.id %}" class="btn btn-primary-p rounded-pill px-4">
+                                            Book Now
+                                        </a>
+                                        {% else %}
+                                        <button class="btn btn-secondary rounded-pill px-4 disabled">
+                                            Wait {{ item.days_remaining }} Days
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <h5 class="fw-bold mb-3 text-dark mt-4"><i class="fas fa-history text-secondary me-2"></i>Your Appointments</h5>
+
+                    {% if consultations %}
+                    <div class="row g-4">
+                        {% for consult in consultations %}
+                        <div class="col-md-6">
+                            <div class="case-card premium-hover rounded-4 p-4 bg-white border-0 shadow-sm h-100">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge {% if consult.status == 'Scheduled' %}bg-soft-success text-success{% else %}bg-soft-warning text-warning{% endif %} rounded-pill px-3">
+                                            {{ consult.status }}
+                                        </span>
+                                        <span class="badge bg-soft-secondary text-secondary rounded-pill px-3 small">
+                                            <i class="fas {% if consult.mode == 'Online' %}fa-video{% else %}fa-hospital-user{% endif %} me-1"></i>
+                                            {{ consult.mode }}
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">{{ consult.created_at|date:"M d" }}</small>
+                                </div>
+                                <h5 class="fw-bold mb-1">Dr. {{ consult.doctor.username }}</h5>
+                                <p class="text-muted small mb-3">{{ consult.doctor.specialization|default:"Specialist" }}</p>
+                                
+                                <div class="bg-light p-3 rounded-4 mb-4">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fas fa-calendar-day text-primary"></i>
+                                        <span class="small fw-bold">{{ consult.preferred_date|date:"F d, Y" }}</span>
+                                    </div>
+                                    {% if consult.scheduled_time %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-clock text-primary"></i>
+                                        <span class="small fw-bold">{{ consult.scheduled_time }}</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-hourglass-half text-warning"></i>
+                                        <span class="small text-muted italic">Time Pending</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="mt-2 pt-2 border-top border-light">
+                                        <p class="small text-muted mb-0"><i class="fas fa-info-circle text-info me-1"></i>Please join 15 mins early.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    {% if consult.status == 'Scheduled' %}
+                                        {% if consult.mode == 'Online' %}
+                                        <a href="{% url 'video_call' consult.id %}" class="btn btn-primary-p rounded-pill btn-sm">
+                                            <i class="fas fa-video me-2"></i>Enter Room
+                                        </a>
+                                        {% else %}
+                                        <div class="alert bg-soft-info text-info border-0 rounded-pill py-2 px-3 mb-0 text-center small">
+                                            <i class="fas fa-map-marker-alt me-1"></i> Clinic: {{ consult.scheduled_time }}
+                                        </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 glass rounded-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted opacity-25 mb-3"></i>
+                        <h5 class="text-secondary">No Consultations</h5>
+                        <p class="text-muted small">Once your report is approved, you can book follow-ups here.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tab: Prescription Box -->
+                <div class="tab-pane fade" id="pills-prescriptions" role="tabpanel">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-box bg-soft-info p-2 me-3 rounded-3 shadow-sm">
+                            <i class="fas fa-prescription-bottle-alt text-info"></i>
+                        </div>
+                        <h3 class="fw-bold mb-0">Prescription Box</h3>
+                    </div>
+
+                    {% if prescriptions %}
+                        {% for presc in prescriptions %}
+                        <div class="case-card premium-hover rounded-4 p-4 mb-3 bg-white border-0 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="patient-avatar-lg bg-soft-info text-info">
+                                        <i class="fas fa-file-prescription"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Prescription for Consult #{{ presc.consultation.id }}</h5>
+                                        <p class="text-muted small mb-0">
+                                            Issued by Dr. {{ presc.doctor.username }} on {{ presc.created_at|date:"M d, Y" }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="{% url 'prescription_pdf' presc.id %}" class="btn btn-outline-info rounded-pill px-4">
+                                    <i class="fas fa-download me-2"></i>Download PDF
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center py-5 glass rounded-4">
+                        <i class="fas fa-capsules fa-3x text-muted opacity-25 mb-3"></i>
+                        <h5 class="text-secondary">No Prescriptions Yet</h5>
+                        <p class="text-muted small">Your prescriptions will appear here after your doctor's review.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div> <!-- End Tab Content -->
+        </div>
+
+        <!-- Right Sidebar: Clinical Status & Tips -->
+        <div class="col-lg-4">
+            <!-- Side Widgets -->
+
+            <div class="glass p-4 rounded-4 shadow-sm border-0 mb-4 patient-sidebar-card">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="fas fa-info-circle text-primary"></i> Helpful Tips
+                </h5>
+                <ul class="list-unstyled small text-secondary" style="line-height: 1.8;">
+                    <li class="mb-3 d-flex gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Upload high-resolution DICOM or PNG/JPG scans for better AI accuracy.</span>
+                    </li>
+                    <li class="mb-3 d-flex gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Follow-up consultations are highly recommended for any non-Normal findings.</span>
+                    </li>
+                    <li class="mb-0 d-flex gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>You can download clinical-grade PDF reports for your insurance or hospital records.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="glass p-4 rounded-4 shadow-sm border-0 patient-sidebar-card">
+                <h5 class="fw-bold mb-3">System Controls</h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'resources' %}" class="btn btn-soft-primary rounded-pill btn-sm text-start px-3 py-2">
+                        <i class="fas fa-book-medical me-2"></i>Knowledge Center
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Request Review Modals -->
+{% for report in reports %}
+{% if report.status == 'Unrequested' %}
+<div class="modal fade" id="requestModal-{{ report.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <form action="{% url 'request_approval' report.id %}" method="POST">
                 {% csrf_token %}
-                <input type="file" id="scan-upload" name="image" onchange="document.getElementById('upload-form').submit()">
-                <textarea name="patient_notes" id="patient-notes-input"></textarea>
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold px-3 pt-3 mb-0">Request Clinical Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="doctor-selection-list mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Default Option -->
+                        <div class="form-check doctor-option-card p-0 mb-2">
+                            <input class="form-check-input d-none" type="radio" name="doctor_id" id="doc-auto-{{ report.id }}" value="" checked>
+                            <label class="form-check-label d-block p-3 rounded-4 border-2 border-light bg-light cursor-pointer" for="doc-auto-{{ report.id }}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-sm bg-soft-secondary text-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-random"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 small">First Available Doctor</h6>
+                                        <p class="extra-small text-muted mb-0">Fastest response time</p>
+                                    </div>
+                                    <i class="fas fa-check-circle ms-auto text-primary check-icon"></i>
+                                </div>
+                            </label>
+                        </div>
+
+                        {% for doctor in available_doctors %}
+                        <div class="form-check doctor-option-card p-0 mb-2">
+                            <input class="form-check-input d-none" type="radio" name="doctor_id" id="doc-{{ doctor.id }}-{{ report.id }}" value="{{ doctor.id }}">
+                            <label class="form-check-label d-block p-3 rounded-4 border-2 border-light bg-light cursor-pointer" for="doc-{{ doctor.id }}-{{ report.id }}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-sm bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 small">Dr. {{ doctor.username }}</h6>
+                                        <p class="extra-small text-muted mb-0">{{ doctor.specialization|default:"Specialist" }}</p>
+                                    </div>
+                                    <i class="fas fa-check-circle ms-auto text-primary check-icon"></i>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <style>
+                        .doctor-option-card input:checked + label {
+                            border-color: #3b82f6 !important;
+                            background-color: #eff6ff !important;
+                        }
+                        .doctor-option-card .check-icon {
+                            display: none;
+                        }
+                        .doctor-option-card input:checked + label .check-icon {
+                            display: block;
+                        }
+                        .cursor-pointer {
+                            cursor: pointer;
+                        }
+                        .extra-small {
+                            font-size: 0.7rem;
+                        }
+                    </style>
+                    <div class="alert bg-soft-primary text-primary border-0 rounded-3 small">
+                        <i class="fas fa-info-circle me-2"></i>Your scan and AI findings will be shared with the selected clinical professional.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 gap-2">
+                    <button type="button" class="btn btn-outline-p flex-fill rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-p flex-fill rounded-pill shadow-sm">Send Request</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+{% endif %}
+{% endfor %}
 
-<div class="container animate-fade" style="margin-top: -3rem;">
 
 
-    <!-- Stats -->
-    <div class="dashboard-grid">
-        <div class="glass-card stat-card" style="border-left: 4px solid var(--primary);">
-            <p style="color: var(--text-gray); font-size: 0.9rem;">Total Scans</p>
-            <h2 style="font-size: 2.5rem;">{{ reports.count }}</h2>
-        </div>
-        <div class="glass-card stat-card" style="border-left: 4px solid var(--success);">
-            <p style="color: var(--text-gray); font-size: 0.9rem;">Normal Results</p>
-            <h2 style="font-size: 2.5rem;">{{ normal_count }}</h2>
-        </div>
-        <div class="glass-card stat-card" style="border-left: 4px solid var(--warning);">
-            <p style="color: var(--text-gray); font-size: 0.9rem;">Pending Reviews</p>
-            <h2 style="font-size: 2.5rem;">{{ pending_count }}</h2>
-        </div>
-    </div>
+{% endblock %}
 
-    <!-- History -->
-    <div class="glass-card" style="margin-top: 3rem; padding: 0;">
-        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-size: 1.2rem;">Recent Scans</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                {% if reports %}
-                    <a href="{% url 'clear_all_history' %}" class="btn" style="background: rgba(229, 62, 62, 0.1); color: var(--error); border: 1px solid var(--error); padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to delete ALL scan history? This action cannot be undone.')">
-                        <i class="fas fa-trash-sweep"></i> Clear All History
-                    </a>
-                {% endif %}
-                <input type="text" placeholder="Search history..." class="form-input" style="padding: 0.5rem 1rem; width: 250px;">
-            </div>
-        </div>
-        
-        <div style="padding: 1rem;">
-            {% if reports %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Scan Image</th>
-                            <th>Date</th>
-                            <th>Primary Finding</th>
-                            <th>Confidence</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in reports %}
-                            <tr>
-                                <td>
-                                    <img src="{{ report.image.url }}" class="history-img" alt="Scan">
-                                </td>
-                                <td>{{ report.created_at|date:"M d, Y" }}</td>
-                                <td>
-                                    <span style="font-weight: 600;">{{ report.result_label }}</span>
-                                </td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 100px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
-                                            <div style="width: {{ report.confidence }}%; height: 100%; background: var(--primary);"></div>
-                                        </div>
-                                        <span style="font-size: 0.85rem;">{{ report.confidence|floatformat:1 }}%</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge" style="background: {% if report.status == 'Approved' %}var(--success){% elif report.status == 'Rejected' %}var(--error){% else %}var(--warning){% endif %}; color: white;">
-                                        {{ report.status }}
-                                        {% if report.status == 'Pending' and report.requested_doctor %}
-                                            <br><small>with Dr. {{ report.requested_doctor.username }}</small>
-                                        {% endif %}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                        {% if report.status == 'Unrequested' %}
-                                            <form action="{% url 'request_approval' report.id %}" method="POST" style="display: flex; gap: 5px; align-items: center;">
-                                                {% csrf_token %}
-                                                <select name="doctor_id" class="form-input" style="padding: 0.3rem; font-size: 0.75rem; width: 130px; border-color: var(--warning);">
-                                                    <option value="">Any Doctor</option>
-                                                    {% for doc in available_doctors %}
-                                                        <option value="{{ doc.id }}">Dr. {{ doc.username }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: var(--warning); border: none;" title="Send for Medical Review">
-                                                    <i class="fas fa-paper-plane"></i> Request
-                                                </button>
-                                            </form>
-                                        {% endif %}
-                                        <a href="{% url 'report_detail' report.id %}" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="View Clinical Dashboard">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                        <a href="{% url 'report_pdf' report.id %}" target="_blank" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="Download PDF">
-                                            <i class="fas fa-download"></i> Save
-                                        </a>
-                                        <a href="{% url 'report_pdf' report.id %}" target="_blank" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="Print Report">
-                                            <i class="fas fa-print"></i> Print
-                                        </a>
-                                        <a href="{% url 'email_report' report.id %}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" title="Send to Registered Email">
-                                            <i class="fas fa-envelope"></i> Send Email
-                                        </a>
-                                        <a href="{% url 'delete_report' report.id %}" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: var(--error); color: white;" title="Delete Permanently" onclick="return confirm('Delete this scan permanently?')">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <div style="text-align: center; padding: 4rem;">
-                    <i class="fas fa-folder-open" style="font-size: 3rem; color: var(--border); margin-bottom: 1rem;"></i>
-                    <p style="color: var(--text-gray);">No scans found. Upload your first X-Ray to begin.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+{% block extra_css %}
+<style>
+/* ══════════════════════════════════════════════════════════
+   PATIENT DASHBOARD  ·  Warm Teal / Emerald Health Theme
+   ══════════════════════════════════════════════════════════ */
 
-<!-- Processing Modal -->
-<div id="processing-modal" class="processing-overlay">
-    <div class="processing-content">
-        <div class="processing-img-wrap">
-            <img id="preview-img" src="" alt="Preview">
-            <div class="scan-line"></div>
-        </div>
-        <h2 class="loader-text pulse">NEURAL NETWORK ANALYZING...</h2>
-        <p class="loader-sub">Extracting radiological features from X-Ray scan.</p>
-        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 10px;">
-             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Augmenting</span>
-             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Classifying</span>
-             <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Validating</span>
-        </div>
-    </div>
-</div>
+/* ── Role identity banner inside header ── */
+.patient-role-strip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(5,150,105,.15), rgba(16,185,129,.10));
+    border: 1.5px solid rgba(16,185,129,.4);
+    border-radius: 50px;
+    padding: 5px 16px 5px 10px;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #059669;
+    margin-bottom: 14px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(5,150,105,.15);
+    animation: patientSlideIn .5s ease both;
+}
+.patient-role-strip .patient-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.25);
+    animation: patientPulse 2s infinite;
+}
+@keyframes patientSlideIn {
+    from { opacity:0; transform:translateX(-12px); }
+    to   { opacity:1; transform:translateX(0); }
+}
+@keyframes patientPulse {
+    0%,100% { box-shadow: 0 0 0 3px rgba(16,185,129,.25); }
+    50%      { box-shadow: 0 0 0 6px rgba(16,185,129,.10); }
+}
 
+/* ── Header card — warm teal gradient ── */
+.patient-header-card {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 55%, #0f766e 100%) !important;
+    border: 1px solid rgba(16,185,129,.25) !important;
+    position: relative;
+    overflow: hidden;
+}
+.patient-header-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.07'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+.patient-header-card .position-relative { position: relative; z-index: 1; }
+.patient-header-card h1 { color: #ffffff !important; }
+.patient-header-card .text-secondary { color: rgba(167,243,208,.85) !important; }
+.patient-header-card .text-primary { color: #6ee7b7 !important; }
+.patient-header-card .text-muted { color: rgba(167,243,208,.55) !important; }
+
+/* Accent top bar */
+.patient-header-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
+    border-radius: 1rem 1rem 0 0;
+}
+
+/* ── Stat cards in header ── */
+.patient-header-card .stat-card {
+    background: rgba(255,255,255,.12) !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    backdrop-filter: blur(12px);
+}
+.patient-header-card .stat-card .text-primary { color: #6ee7b7 !important; }
+.patient-header-card .stat-card .text-success { color: #a7f3d0 !important; }
+.patient-header-card .stat-card .text-warning { color: #fde68a !important; }
+.patient-header-card .stat-card .text-muted { color: rgba(167,243,208,.7) !important; }
+
+/* ── Below-header tab bar ── */
+.patient-tab-bar {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(16,185,129,.15);
+    border-radius: 1rem;
+    padding: 6px 10px;
+    box-shadow: 0 2px 12px rgba(5,150,105,.08);
+}
+.patient-tab-bar .nav-link {
+    color: #64748b !important;
+    background: transparent !important;
+    border: 1.5px solid transparent !important;
+    font-size: .85rem;
+    transition: all .22s;
+}
+.patient-tab-bar .nav-link:hover {
+    color: #059669 !important;
+    background: rgba(16,185,129,.07) !important;
+    border-color: rgba(16,185,129,.2) !important;
+}
+.patient-tab-bar .nav-link.active {
+    background: linear-gradient(135deg, #059669, #0d9488) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px rgba(5,150,105,.35) !important;
+}
+
+/* ── Sidebar cards ── */
+.patient-sidebar-card {
+    border-left: 4px solid #10b981 !important;
+    transition: transform .2s, box-shadow .2s;
+}
+.patient-sidebar-card:hover {
+    transform: translateX(3px);
+    box-shadow: 0 6px 24px rgba(16,185,129,.15) !important;
+}
+
+/* ── Case cards hover ── */
+.case-card.premium-hover:hover {
+    border-left: 3px solid #10b981 !important;
+    box-shadow: 0 8px 32px rgba(16,185,129,.12) !important;
+}
+
+/* ── Eligible report card ── */
+.patient-header-card + div .glass {
+    border-left: 3px solid #10b981;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.getElementById('scan-upload').addEventListener('change', function(e) {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                // Show preview image
-                document.getElementById('preview-img').src = event.target.result;
-                // Show modal
-                document.getElementById('processing-modal').style.display = 'flex';
-                // Submit after a small delay to let the animation start
-                setTimeout(() => {
-                    document.getElementById('upload-form').submit();
-                }, 800);
-            }
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-
-    // Handle search filtering
-    document.querySelector('input[placeholder="Search history..."]').addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('tbody tr').forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(term) ? '' : 'none';
-        });
-    });
+    // Live Dashboard Polling
+    function updateDashboard() {
+        fetch("{% url 'patient_dashboard_data' %}")
+            .then(response => response.json())
+            .then(data => {
+                // If statuses have changed, reload to get new UI elements
+                // (Optional implementation for auto-refresh)
+            })
+            .catch(err => console.error("Poll error:", err));
+    }
+    // Poll every 60 seconds
+    // setInterval(updateDashboard, 60000);
 </script>
 {% endblock %}

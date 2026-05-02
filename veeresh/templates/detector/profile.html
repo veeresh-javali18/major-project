@@ -1,70 +1,191 @@
 {% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Profile Settings | LungQuest AI{% endblock %}
 
 {% block content %}
-<div class="dashboard-header animate-fade">
-    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">User <span>Profile</span></h1>
-    <p>Manage your account settings and personal medical credentials.</p>
-</div>
-
-<div class="container animate-fade" style="margin-top: -3rem;">
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
-        <!-- Sidebar -->
-        <div class="glass-card" style="text-align: center;">
-            <div style="width: 120px; height: 120px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 4px solid white; box-shadow: var(--shadow);">
-                <i class="fas {% if target_user.role == 'doctor' %}fa-user-md{% else %}fa-user{% endif %}" style="font-size: 3rem; color: var(--primary);"></i>
-            </div>
-            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">{{ target_user.username }}</h2>
-            <p class="badge" style="background: var(--primary); color: white;">{{ target_user.role|upper }}</p>
-            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border);">
-            <div style="text-align: left; font-size: 0.9rem;">
-                <p style="margin-bottom: 10px;"><i class="fas fa-calendar-alt" style="margin-right: 10px; color: var(--text-muted);"></i> Joined: {{ target_user.date_joined|date:"M Y" }}</p>
-                <p style="margin-bottom: 10px;"><i class="fas fa-id-card" style="margin-right: 10px; color: var(--text-muted);"></i> ID: #{{ target_user.id }}</p>
-            </div>
-        </div>
-
-        <!-- Details -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">Account Information</h3>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div>
-                    <label style="display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">Username</label>
-                    <p style="font-weight: 600;">{{ target_user.username }}</p>
-                </div>
-                <div>
-                    <label style="display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">Email Address</label>
-                    <p style="font-weight: 600;">{{ target_user.email }}</p>
-                </div>
-                <div>
-                    <label style="display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">Phone Number</label>
-                    <p style="font-weight: 600;">{{ target_user.phone_number }}</p>
-                </div>
-                <div>
-                    <label style="display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">Verification Status</label>
-                    <p style="font-weight: 600; color: var(--success);"><i class="fas fa-check-circle"></i> Identity Verified</p>
-                </div>
-            </div>
-
-            {% if target_user.role == 'doctor' %}
-                <h3 style="margin-top: 3rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">Clinical Credentials</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div>
-                        <label style="display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">Specialization</label>
-                        <p style="font-weight: 600;">{{ target_user.specialization }}</p>
+<div class="container-fluid px-lg-5 py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <!-- Header Section -->
+            <div class="glass p-4 p-md-5 rounded-4 shadow-lg mb-5 position-relative overflow-hidden">
+                <div class="header-bg-glow"></div>
+                <div class="position-relative z-1 d-flex flex-column flex-md-row align-items-center gap-4">
+                    <div class="profile-avatar-xl bg-primary text-white shadow-lg">
+                        {{ target_user.username|slice:":1"|upper }}
                     </div>
-                    <div>
-                        <label style="display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">Medical License</label>
-                        <p style="font-weight: 600;">{{ target_user.license_number }}</p>
+                    <div class="text-center text-md-start">
+                        <h1 class="fw-bold mb-1 text-gradient">{{ target_user.username }}</h1>
+                        <p class="text-secondary mb-0">
+                            <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2 text-uppercase small">
+                                <i class="fas {% if target_user.role == 'doctor' %}fa-user-md{% else %}fa-user{% endif %} me-2"></i>
+                                {{ target_user.role }}
+                            </span>
+                            <span class="mx-2 text-muted">|</span>
+                            <span class="small fw-medium">Member since {{ target_user.date_joined|date:"F Y" }}</span>
+                        </p>
+                    </div>
+                    <div class="ms-md-auto">
+                        <button type="button" class="btn btn-primary-p rounded-pill px-4" onclick="toggleEdit()">
+                            <i class="fas fa-edit me-2"></i>Edit Clinical Profile
+                        </button>
                     </div>
                 </div>
-            {% endif %}
-
-            <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); display: flex; gap: 1rem;">
-                <button class="btn btn-outline" style="color: var(--error); border-color: var(--error);" onclick="if(confirm('Delete account permanently?')) window.location='{% url 'delete_account' target_user.id %}'">
-                    <i class="fas fa-trash-alt" style="margin-right: 10px;"></i> Terminate Account
-                </button>
             </div>
+
+            <form method="POST" id="profileForm">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <!-- Left Sidebar: Basic Info -->
+                    <div class="col-lg-4">
+                        <div class="glass p-4 rounded-4 shadow-sm border-0 h-100">
+                            <h5 class="fw-bold mb-4">Account Details</h5>
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Username</label>
+                                <p class="fw-bold mb-0">{{ target_user.username }}</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Email Address</label>
+                                <p class="fw-bold mb-0">{{ target_user.email }}</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Phone Number</label>
+                                <input type="text" name="phone_number" class="form-control rounded-3 border-0 bg-light profile-input" value="{{ target_user.phone_number|default:'' }}" readonly>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Status</label>
+                                <p class="mb-0 text-success fw-bold small">
+                                    <i class="fas fa-check-circle me-1"></i> Identity Verified
+                                </p>
+                            </div>
+                            
+                            <hr class="my-4 opacity-10">
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success rounded-pill d-none" id="saveBtn">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                                <button type="button" class="btn btn-soft-danger rounded-pill btn-sm mt-3" onclick="confirmDelete()">
+                                    <i class="fas fa-trash-alt me-2"></i>Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Section: Medical / Clinical Profile -->
+                    <div class="col-lg-8">
+                        {% if target_user.role == 'doctor' %}
+                        <!-- Doctor Specific Info -->
+                        <div class="glass p-4 p-md-5 rounded-4 shadow-sm border-0 mb-4">
+                            <h4 class="fw-bold mb-4">Clinical Credentials</h4>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Specialization</label>
+                                    <p class="fw-bold fs-5">{{ target_user.specialization|default:"General Physician" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Medical License</label>
+                                    <p class="fw-bold fs-5 text-primary">{{ target_user.license_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Patient Specific Medical Profile -->
+                        <div class="glass p-4 p-md-5 rounded-4 shadow-sm border-0">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <div class="icon-box bg-soft-primary text-primary p-2 rounded-3">
+                                    <i class="fas fa-notes-medical"></i>
+                                </div>
+                                <h4 class="fw-bold mb-0">Medical History Profile</h4>
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Smoking History</label>
+                                    <input type="text" name="smoking_history" class="form-control rounded-3 border-0 bg-light profile-input" 
+                                           placeholder="e.g. Non-smoker, 5 pack-years" value="{{ target_user.smoking_history|default:'' }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Known Allergies</label>
+                                    <input type="text" name="allergies" class="form-control rounded-3 border-0 bg-light profile-input" 
+                                           placeholder="e.g. Penicillin, Pollen" value="{{ target_user.allergies|default:'' }}" readonly>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Chronic Medical Conditions</label>
+                                    <textarea name="medical_conditions" class="form-control rounded-3 border-0 bg-light profile-input" 
+                                              rows="3" placeholder="List any chronic conditions (e.g. Asthma, Hypertension, Diabetes)" readonly>{{ target_user.medical_conditions|default:'' }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Current Medications</label>
+                                    <textarea name="current_medications" class="form-control rounded-3 border-0 bg-light profile-input" 
+                                              rows="3" placeholder="List all current medications and dosages" readonly>{{ target_user.current_medications|default:'' }}</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="alert bg-soft-info text-primary border-0 rounded-4 mt-5 d-flex gap-3">
+                                <i class="fas fa-user-shield fs-4"></i>
+                                <p class="small mb-0">This information is strictly confidential and will only be shared with physicians during your clinical reviews and consultations.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+    function toggleEdit() {
+        const inputs = document.querySelectorAll('.profile-input');
+        const saveBtn = document.getElementById('saveBtn');
+        const isEditMode = inputs[0].hasAttribute('readonly');
+
+        inputs.forEach(input => {
+            if (isEditMode) {
+                input.removeAttribute('readonly');
+                input.classList.remove('bg-light');
+                input.classList.add('border-primary', 'border-opacity-25');
+            } else {
+                input.setAttribute('readonly', 'readonly');
+                input.classList.add('bg-light');
+                input.classList.remove('border-primary', 'border-opacity-25');
+            }
+        });
+
+        saveBtn.classList.toggle('d-none');
+    }
+
+    function confirmDelete() {
+        if (confirm('CAUTION: This action is permanent. All your medical scans, reports, and consultation history will be permanently deleted. Do you wish to proceed?')) {
+            window.location = "{% url 'delete_account' target_user.id %}";
+        }
+    }
+</script>
+
+<style>
+    .profile-avatar-xl {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 800;
+        border: 4px solid rgba(255,255,255,0.8);
+    }
+    .profile-input[readonly] {
+        cursor: default;
+        pointer-events: none;
+    }
+    .profile-input:focus {
+        background: white !important;
+        box-shadow: 0 0 0 4px rgba(var(--brand-primary-rgb), 0.1);
+    }
+</style>
 {% endblock %}

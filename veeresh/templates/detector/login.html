@@ -1,64 +1,89 @@
 {% extends 'detector/base.html' %}
+{% load static %}
+
+{% block title %}Clinical Portal Access | LungQuest AI{% endblock %}
 
 {% block content %}
-<div class="auth-wrapper animate-fade">
-    <div class="glass-card auth-card">
-        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Access Portal</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Please select your access role to continue.</p>
-        
-        <form method="POST">
-            {% csrf_token %}
-            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-                <label style="flex: 1; cursor: pointer;">
-                    <input type="radio" name="login_role" value="patient" checked style="display: none;" onchange="updateLoginUI(this)">
-                    <div class="role-box active" id="role-patient" style="padding: 1rem; border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition);">
-                        <i class="fas fa-user" style="font-size: 1.5rem; margin-bottom: 10px;"></i><br>
-                        <strong>Patient</strong>
+<div class="auth-wrapper py-5 min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5 col-xl-4">
+                <div class="card border-0 shadow-lg auth-card overflow-hidden">
+                    <div class="card-header bg-white border-0 pt-5 pb-0 text-center">
+                        <div class="auth-icon-wrapper mx-auto mb-3">
+                            <i class="fas fa-lock text-primary fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">Portal Access</h3>
+                        <p class="text-muted small">Sign in to your account to continue</p>
                     </div>
-                </label>
-                <label style="flex: 1; cursor: pointer;">
-                    <input type="radio" name="login_role" value="doctor" style="display: none;" onchange="updateLoginUI(this)">
-                    <div class="role-box" id="role-doctor" style="padding: 1rem; border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition);">
-                        <i class="fas fa-user-md" style="font-size: 1.5rem; margin-bottom: 10px;"></i><br>
-                        <strong>Doctor</strong>
-                    </div>
-                </label>
-            </div>
+                    <div class="card-body p-4 p-lg-5 pt-4">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} border-0 shadow-sm rounded-4 mb-4" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>{{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
 
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" class="form-input" placeholder="johndoe" required>
+                        <form method="POST">
+                            {% csrf_token %}
+
+                            <!-- Role Selection -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted mb-3">Login as:</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="login_role" id="role-patient" value="patient" checked>
+                                        <label class="btn btn-outline-primary btn-lg w-100 py-3 rounded-4 role-btn d-flex flex-column align-items-center" for="role-patient">
+                                            <i class="fas fa-user mb-1"></i>
+                                            Patient
+                                        </label>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="login_role" id="role-doctor" value="doctor">
+                                        <label class="btn btn-outline-primary btn-lg w-100 py-3 rounded-4 role-btn d-flex flex-column align-items-center" for="role-doctor">
+                                            <i class="fas fa-user-md mb-1"></i>
+                                            Doctor
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control rounded-4 border-light bg-light" id="username" name="username" placeholder="Username" required autofocus>
+                                <label for="username"><i class="fas fa-id-badge me-2 text-primary"></i>Username</label>
+                            </div>
+
+                            <div class="form-floating mb-4">
+                                <input type="password" class="form-control rounded-4 border-light bg-light" id="password" name="password" placeholder="Password" required>
+                                <label for="password"><i class="fas fa-fingerprint me-2 text-primary"></i>Password</label>
+                            </div>
+
+                            <!-- Captcha -->
+                            <div class="mb-4 p-3 bg-light rounded-4 border border-light">
+                                <label class="form-label fw-bold small text-muted"><i class="fas fa-shield-alt me-2 text-primary"></i>Security Check</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-white px-4 py-2 rounded-3 shadow-sm fs-5 fw-bold text-primary border">
+                                        {{ num1 }} + {{ num2 }} =
+                                    </div>
+                                    <input type="number" class="form-control form-control-lg rounded-3 border-light shadow-sm bg-white" name="captcha_answer" placeholder="Answer" required style="width: 120px;">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-p btn-lg w-100 py-3 rounded-4 shadow-sm fw-bold animate-up">
+                                <i class="fas fa-sign-in-alt me-2"></i>Authorize Account
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-5">
+                            <p class="text-muted mb-0 small">New to the portal? 
+                                <a href="{% url 'signup' %}" class="fw-bold text-primary text-decoration-none">Create Credentials</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" class="form-input" placeholder="••••••••" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; margin-top: 1rem;">
-                Login <i class="fas fa-sign-in-alt" style="margin-left: 10px;"></i>
-            </button>
-        </form>
-        
-        <p style="margin-top: 2rem; color: var(--text-muted);">
-            New to LungQuest? <a href="{% url 'signup' %}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Create account</a>
-        </p>
+        </div>
     </div>
 </div>
-
-<style>
-    .role-box.active {
-        border-color: var(--primary) !important;
-        background: var(--primary-light) !important;
-        color: var(--primary);
-    }
-</style>
-
-<script>
-    function updateLoginUI(el) {
-        document.querySelectorAll('.role-box').forEach(box => box.classList.remove('active'));
-        if (el.value === 'patient') document.getElementById('role-patient').classList.add('active');
-        if (el.value === 'doctor') document.getElementById('role-doctor').classList.add('active');
-    }
-</script>
 {% endblock %}
-

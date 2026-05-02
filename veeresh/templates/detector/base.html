@@ -3,102 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LungQuest AI | High-End Lung Disease Detection{% endblock %}</title>
-    {% load static %}
+    <meta name="description" content="AI-powered lung disease detection and classification. Upload chest X-rays/CT scans for instant analysis.">
+    <title>{% block title %}LungQuest AI | Clinical Grade Diagnostics{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫁</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    {% load static role_tags %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        // Immediate Theme Application (Prevent FOUC)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
+    <style>
+        /* High-priority theme fallback */
+        [data-theme="dark"] body { background-color: #0a0f1d !important; color: #f1f5f9 !important; }
+        [data-theme="dark"] .glass, [data-theme="dark"] .card { background-color: #111827 !important; border-color: #1e293b !important; color: #f1f5f9 !important; }
+        [data-theme="dark"] .navbar { background: rgba(10, 15, 29, 0.9) !important; border-bottom: 1px solid #1e293b !important; }
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4, [data-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+    </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="bg-blob blob-1"></div>
-    <div class="bg-blob blob-2"></div>
 
-    <nav>
-        <a href="{% url 'landing' %}" class="logo">
-            <i class="fas fa-lungs"></i> Lung<span>Quest</span> AI
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg glass sticky-top">
+    <div class="container-fluid px-lg-5">
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'landing' %}">
+            <i class="fas fa-lungs me-2 fs-4 text-primary"></i>
+            <span class="fw-bold">Lung<span class="text-primary">Quest</span> AI</span>
         </a>
-        <ul class="nav-links">
-            <li><a href="{% url 'landing' %}">Home</a></li>
-            {% if user.is_authenticated %}
-                <li><a href="{% url 'dashboard_redirect' %}">Dashboard</a></li>
-            {% endif %}
-            <li><a href="{% url 'resources' %}">Resources</a></li>
-            <li><a href="{% url 'about' %}">About</a></li>
-        </ul>
-        <div class="nav-btns">
-            {% if user.is_authenticated %}
-                <span style="margin-right: 15px; color: var(--text-gray);">Hello, {{ user.username }}</span>
-                <a href="{% url 'profile' %}" class="btn btn-outline" style="margin-right: 10px;">
-                    <i class="fas fa-user-circle"></i> Profile
-                </a>
-                <a href="{% url 'logout' %}" class="btn btn-primary">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
-                <a href="{% url 'signup' %}" class="btn btn-primary">Join Now</a>
-            {% endif %}
-        </div>
-    </nav>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Left Side Links -->
+            <ul class="navbar-nav ms-lg-4 align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'landing' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about' %}">About</a>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">New Scan</a>
+                </li>
+                {% endif %}
+            </ul>
 
-    {% if messages %}
-        <div class="container">
-            {% for message in messages %}
-                <div class="glass-card" style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid var(--primary);">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <!-- Right Side Controls -->
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item me-3 d-flex align-items-center">
+                    <button class="btn btn-link nav-link p-0 theme-toggle-btn border-0 shadow-none d-flex align-items-center" id="theme-toggle" title="Toggle Theme" style="height: 40px; width: 40px; justify-content: center;">
+                        <i class="fas fa-moon fs-5"></i>
+                    </button>
+                </li>
+                
+                {% if user.is_authenticated %}
+                {% if user|is_doctor %}
+                <li class="nav-item">
+                    <a class="nav-link py-1" href="{% url 'doctor_dashboard' %}">
+                        <span class="badge bg-soft-primary text-primary px-3 rounded-pill fw-bold" style="padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 0.75rem;">Doctor Portal</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link py-1" href="{% url 'patient_dashboard' %}">
+                        <span class="badge bg-soft-info text-info px-3 rounded-pill fw-bold" style="padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 0.75rem;">Patient Portal</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="nav-item dropdown ms-lg-3">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 700;">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                        {{ user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2" style="border-radius: 1rem;">
+                        <li><a class="dropdown-item rounded-3 py-2" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-muted"></i>Profile</a></li>
+                        {% if user.is_superuser %}
+                        <li><a class="dropdown-item rounded-3 py-2" href="{% url 'user_management' %}"><i class="fas fa-users-cog me-2 text-muted"></i>User Management</a></li>
+                        <li><a class="dropdown-item rounded-3 py-2" href="/admin/" target="_blank"><i class="fas fa-shield-alt me-2 text-muted"></i>Django Admin</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item rounded-3 py-2 text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item ms-lg-3">
+                    <a href="{% url 'login' %}" class="btn btn-outline-p px-4 py-2 me-2">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'signup' %}" class="btn btn-primary-p px-4 py-2">Join Now</a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-    {% endif %}
-
-    {% if user.is_authenticated %}
-    <div class="container" style="padding-bottom: 0;">
-        <a href="javascript:history.back()" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.9rem; border: none; background: transparent; color: var(--text-muted);">
-            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back
-        </a>
     </div>
+</nav>
+
+<!-- Messages -->
+{% if messages %}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+    {% for message in messages %}
+    <div class="toast show align-items-center border-0 shadow-lg mb-2" role="alert" style="border-radius: 12px; border-left: 4px solid {% if message.tags == 'success' %}#10b981{% elif message.tags == 'error' %}#ef4444{% else %}#3b82f6{% endif %} !important;">
+        <div class="d-flex p-3">
+            <div class="me-3 fs-5 {% if message.tags == 'success' %}text-success{% elif message.tags == 'error' %}text-danger{% else %}text-primary{% endif %}">
+                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>
+                {% elif message.tags == 'error' %}<i class="fas fa-exclamation-circle"></i>
+                {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+            </div>
+            <div class="toast-body p-0">
+                <p class="fw-bold mb-0 text-dark" style="font-size: 0.85rem; letter-spacing: 0.5px;">{% if message.tags == 'success' %}SUCCESS{% elif message.tags == 'error' %}ERROR{% else %}NOTIFICATION{% endif %}</p>
+                <p class="mb-0 text-secondary" style="font-size: 0.9rem;">{{ message }}</p>
+            </div>
+            <button type="button" class="btn-close ms-auto me-0" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Back Button -->
+{% block back_button %}
+{% if user.is_authenticated and request.resolver_match.url_name != 'landing' %}
+<div class="container-fluid px-lg-5 mt-3">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted small animate-up d-inline-block">
+        <i class="fas fa-arrow-left me-2"></i>Back to previous page
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+<!-- Main Content -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer-premium">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <a class="navbar-brand mb-3 d-block" href="{% url 'landing' %}">
+                    <i class="fas fa-lungs me-2"></i>LungQuest AI
+                </a>
+                <p>Clinical-grade AI diagnostics for early detection of lung diseases. Empowering doctors and patients with instant, accurate insights.</p>
+                <div class="mt-4 d-flex gap-3">
+                    <a href="#" class="btn btn-sm btn-outline-p rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="btn btn-sm btn-outline-p rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="btn btn-sm btn-outline-p rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{% url 'landing' %}">Home</a></li>
+                    <li><a href="{% url 'about' %}">About Us</a></li>
+                    <li><a href="{% url 'resources' %}">Resources</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 LungQuest AI. All rights reserved. Major Project Implementation.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    {% if user.is_authenticated %}
+    // Clinical Auto-Logout System (10 Min Inactivity)
+    let idleTime = 0;
+    const idleLimit = 10; // 10 Minutes
+
+    const idleInterval = setInterval(timerIncrement, 60000); 
+
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keypress', resetTimer);
+    window.addEventListener('scroll', resetTimer);
+    window.addEventListener('click', resetTimer);
+
+    function resetTimer() {
+        idleTime = 0;
+    }
+
+    function timerIncrement() {
+        idleTime = idleTime + 1;
+        if (idleTime >= idleLimit) {
+            window.location.href = "{% url 'logout' %}?timeout=true";
+        }
+    }
     {% endif %}
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    // Professional Platform Scripts
+    // Unified Theme Engine
+    (function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle ? themeToggle.querySelector('i') : null;
 
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (themeIcon) {
+                if (theme === 'dark') {
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            }
+            console.log('Theme applied:', theme);
+        }
 
-    <footer style="padding: 3rem 5%; text-align: center; border-top: 1px solid var(--border); margin-top: 5rem;">
-        <p style="color: var(--text-gray);">&copy; 2026 LungQuest AI. Clinical Grade Diagnostics.</p>
-    </footer>
-
-    <script>
-        // Smooth transitions for progress bars if any
-        window.addEventListener('load', () => {
-            const bars = document.querySelectorAll('.confidence-bar');
-            bars.forEach(bar => {
-                const width = bar.getAttribute('data-width');
-                bar.style.width = width + '%';
+        if (themeToggle) {
+            themeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                const current = document.documentElement.getAttribute('data-theme') || 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
             });
+        }
+
+        // Sync icon on load
+        const initialTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(initialTheme);
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Auto-dismiss toasts
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.hide();
+            }, 5000);
         });
 
-        // Auto-logout after 5 minutes of inactivity
-        {% if user.is_authenticated %}
-        let idleTime = 0;
-        const idleInterval = setInterval(timerIncrement, 60000); // Check every minute
+        // Global Professional Form Validation
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.setAttribute('novalidate', '');
+            form.addEventListener('submit', (e) => {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-        // Zero the idle timer on mouse movement or keypress
-        window.onmousemove = resetTimer;
-        window.onkeypress = resetTimer;
-        window.onclick = resetTimer;
-        window.ontouchstart = resetTimer;
+                    const firstInvalid = form.querySelector(':invalid');
+                    let errorMsg = "Mandatory Documentation Required: Please complete all highlighted clinical fields to proceed.";
+                    
+                    if (firstInvalid) {
+                        const fieldName = firstInvalid.getAttribute('name') || firstInvalid.getAttribute('placeholder') || 'this field';
+                        errorMsg = `Assessment Incomplete: The ${fieldName.toLowerCase()} field requires a professional entry before submission.`;
+                        
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalid.classList.add('is-invalid');
+                        setTimeout(() => firstInvalid.classList.remove('is-invalid'), 4000);
+                    }
 
-        function resetTimer() {
-            idleTime = 0;
-        }
+                    showToast('SECURITY & VALIDATION', errorMsg, 'danger');
+                }
+            });
+        });
+    });
 
-        function timerIncrement() {
-            idleTime++;
-            if (idleTime >= 5) { // 5 minutes
-                window.location.href = "{% url 'logout' %}";
-            }
-        }
-        {% endif %}
-    </script>
+    function showToast(title, message, type) {
+        const container = document.querySelector('.toast-container');
+        if (!container) return;
+
+        const borderCol = type === 'success' ? '#10b981' : (type === 'danger' ? '#ef4444' : '#3b82f6');
+        const iconClass = type === 'success' ? 'fa-check-circle' : (type === 'danger' ? 'fa-exclamation-circle' : 'fa-info-circle');
+        const textClass = type === 'success' ? 'text-success' : (type === 'danger' ? 'text-danger' : 'text-primary');
+
+        const toastHtml = `
+            <div class="toast show align-items-center border-0 shadow-lg mb-2" role="alert" style="border-radius: 12px; border-left: 4px solid ${borderCol} !important;">
+                <div class="d-flex p-3">
+                    <div class="me-3 fs-5 ${textClass}"><i class="fas ${iconClass}"></i></div>
+                    <div class="toast-body p-0">
+                        <p class="fw-bold mb-0 text-dark" style="font-size: 0.85rem; letter-spacing: 0.5px;">${title}</p>
+                        <p class="mb-0 text-secondary" style="font-size: 0.9rem;">${message}</p>
+                    </div>
+                    <button type="button" class="btn-close ms-auto me-0" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        const newToast = container.lastElementChild;
+        setTimeout(() => {
+            newToast.style.opacity = '0';
+            setTimeout(() => newToast.remove(), 500);
+        }, 5000);
+    }
+</script>
+
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>
