@@ -7,6 +7,6 @@ xhtml2pdf
 APScheduler
 python-dateutil
 twilio
-tensorflow==2.20.0
+tensorflow-cpu
 torch==2.8.0
 torchvision==0.23.0

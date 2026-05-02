@@ -1,7 +1,4 @@
-import torch
-import torch.nn as nn
-from torchvision import models
-import tensorflow as tf
+# Heavy imports moved inside functions to save memory during startup
 from PIL import Image
 import numpy as np
 import os
@@ -35,6 +32,10 @@ LABELS = ['Lung Opacity', 'COVID-19', 'Pneumonia', 'Normal']
 
 def load_models():
     global MODEL_TF, MODEL_PT
+    import torch
+    import torch.nn as nn
+    from torchvision import models
+    import tensorflow as tf
     
     # Load TensorFlow Model
     if MODEL_TF is None:
