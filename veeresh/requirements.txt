@@ -1,0 +1,7 @@
+django
+gunicorn
+whitenoise
+pillow
+tensorflow-cpu
+torch
+torchvision
