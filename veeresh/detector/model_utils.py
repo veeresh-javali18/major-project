@@ -4,26 +4,7 @@ import numpy as np
 import os
 from django.conf import settings
 
-# --- PyTorch Model Structure ---
-class LungNet(nn.Module):
-    def __init__(self, num_classes=4):
-        super().__init__()
-        self.backbone = models.resnet50(weights=None)
-        in_features = self.backbone.fc.in_features
-        self.backbone.fc = nn.Sequential(
-            nn.Linear(in_features, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Dropout(0.4),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(256, num_classes),
-        )
 
-    def forward(self, x):
-        return self.backbone(x)
 
 # --- Global Model Variables ---
 MODEL_TF = None
@@ -36,6 +17,27 @@ def load_models():
     import torch.nn as nn
     from torchvision import models
     import tensorflow as tf
+
+    # Define model structure inside to ensure nn and models are available
+    class LungNet(nn.Module):
+        def __init__(self, num_classes=4):
+            super().__init__()
+            self.backbone = models.resnet50(weights=None)
+            in_features = self.backbone.fc.in_features
+            self.backbone.fc = nn.Sequential(
+                nn.Linear(in_features, 512),
+                nn.BatchNorm1d(512),
+                nn.ReLU(),
+                nn.Dropout(0.4),
+                nn.Linear(512, 256),
+                nn.BatchNorm1d(256),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(256, num_classes),
+            )
+
+        def forward(self, x):
+            return self.backbone(x)
     
     # Load TensorFlow Model
     if MODEL_TF is None:
