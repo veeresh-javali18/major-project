@@ -2,6 +2,11 @@ django
 gunicorn
 whitenoise
 pillow
-tensorflow-cpu
-torch
-torchvision
+numpy
+xhtml2pdf
+APScheduler
+python-dateutil
+twilio
+tensorflow==2.20.0
+torch==2.8.0
+torchvision==0.23.0
